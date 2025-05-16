@@ -1,107 +1,18 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
+import axios from "axios"
 
 export default function StorePage() {
-  // Sample products
-  const popularProducts = [
-    {
-      id: 1,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 2,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 3,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 4,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 5,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-  ]
-
-  const allProducts = [
-    {
-      id: 6,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 7,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 8,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 9,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 10,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 11,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 12,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-    {
-      id: 13,
-      name: "Product Name",
-      company: "Company Name",
-      price: "Rs. 300",
-      image: "/placeholder.svg?height=300&width=300",
-    },
-  ]
+  const [popularProducts, setPopularProducts] = useState([])
+  const [allProducts, setAllProducts] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
 
   // Filter categories
   const filterCategories = [
@@ -112,26 +23,81 @@ export default function StorePage() {
     { name: "All Prizes", expanded: false },
   ]
 
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  const fetchProducts = async () => {
+    try {
+      // Fetch featured products
+      const featuredResponse = await axios.get("/api/products?featured=true")
+      setPopularProducts(featuredResponse.data)
+
+      // Fetch all products
+      const allResponse = await axios.get("/api/products")
+      setAllProducts(allResponse.data)
+
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Error fetching products:", error)
+      setIsLoading(false)
+    }
+  }
+
+  const handleSearch = async (e) => {
+    e.preventDefault()
+
+    try {
+      const response = await axios.get(`/api/products?search=${searchTerm}`)
+      setAllProducts(response.data)
+    } catch (error) {
+      console.error("Error searching products:", error)
+    }
+  }
+
+  const formatPrice = (price) => {
+    return `₹${Number.parseFloat(price).toFixed(2)}`
+  }
+
+  if (isLoading) {
+    return (
+      <div className="py-6">
+        <h1 className="text-3xl font-bold text-white mb-8">Product Catalog</h1>
+        <div className="bg-[#111] rounded-3xl p-8 flex justify-center items-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-yellow-400"></div>
+          <p className="text-white ml-2">Loading products...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="py-6">
       <h1 className="text-3xl font-bold text-white mb-8">Product Catalog</h1>
 
       {/* Popular Products */}
       <div className="bg-[#111] rounded-3xl p-6 mb-8">
-        <h2 className="text-xl font-bold text-white mb-4">Popular Product</h2>
+        <h2 className="text-xl font-bold text-white mb-4">Popular Products</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {popularProducts.map((product) => (
             <div key={product.id} className="bg-black rounded-xl overflow-hidden">
               <Link href={`/product/${product.id}`}>
                 <div className="relative aspect-square">
-                  <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
+                  <Image
+                    src={product.image || "/placeholder.svg?height=300&width=300"}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <div className="p-3">
                   <h3 className="text-white font-medium text-sm">{product.name}</h3>
-                  <p className="text-gray-400 text-xs">by {product.company}</p>
-                  <p className="text-green-400 text-sm font-medium mt-1">{product.price}</p>
+                  <p className="text-gray-400 text-xs">by {product.brandName}</p>
+                  <p className="text-green-400 text-sm font-medium mt-1">
+                    {product.discountPrice ? formatPrice(product.discountPrice) : formatPrice(product.price)}
+                  </p>
                   <Button variant="outline" className="w-full mt-2 text-xs h-8 bg-white text-black hover:bg-gray-200">
-                    I&apos;m interested
+                    I'm interested
                   </Button>
                 </div>
               </Link>
@@ -141,7 +107,7 @@ export default function StorePage() {
       </div>
 
       {/* All Products */}
-      <h2 className="text-3xl font-bold text-white mb-4">All Product</h2>
+      <h2 className="text-3xl font-bold text-white mb-4">All Products</h2>
 
       <div className="bg-[#111] rounded-3xl p-6">
         <div className="flex flex-col md:flex-row gap-6">
@@ -162,15 +128,17 @@ export default function StorePage() {
 
           {/* Products Grid */}
           <div className="flex-1">
-            <div className="flex items-center mb-6 bg-[#222] rounded-full overflow-hidden">
+            <form onSubmit={handleSearch} className="flex items-center mb-6 bg-[#222] rounded-full overflow-hidden">
               <Input
                 placeholder="Search products..."
                 className="border-0 bg-transparent text-white focus-visible:ring-0 focus-visible:ring-offset-0"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Button size="icon" className="rounded-full bg-white h-8 w-8 mr-1">
+              <Button type="submit" size="icon" className="rounded-full bg-white h-8 w-8 mr-1">
                 <Search className="h-4 w-4 text-black" />
               </Button>
-            </div>
+            </form>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {allProducts.map((product) => (
@@ -178,7 +146,7 @@ export default function StorePage() {
                   <Link href={`/product/${product.id}`}>
                     <div className="relative aspect-square">
                       <Image
-                        src={product.image || "/placeholder.svg"}
+                        src={product.image || "/placeholder.svg?height=300&width=300"}
                         alt={product.name}
                         fill
                         className="object-cover"
@@ -186,13 +154,15 @@ export default function StorePage() {
                     </div>
                     <div className="p-3">
                       <h3 className="text-white font-medium text-sm">{product.name}</h3>
-                      <p className="text-gray-400 text-xs">by {product.company}</p>
-                      <p className="text-green-400 text-sm font-medium mt-1">{product.price}</p>
+                      <p className="text-gray-400 text-xs">by {product.brandName}</p>
+                      <p className="text-green-400 text-sm font-medium mt-1">
+                        {product.discountPrice ? formatPrice(product.discountPrice) : formatPrice(product.price)}
+                      </p>
                       <Button
                         variant="outline"
                         className="w-full mt-2 text-xs h-8 bg-white text-black hover:bg-gray-200"
                       >
-                        I&apos;m interested
+                        I'm interested
                       </Button>
                     </div>
                   </Link>
