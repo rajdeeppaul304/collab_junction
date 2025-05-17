@@ -1,31 +1,20 @@
-import "./globals.css"
-
-import { ClerkProvider } from "@clerk/nextjs"
-import  Provider  from "@/app/provider"
-
+"use client";
+import './globals.css';
+import { SessionProvider } from 'next-auth/react';
 
 
-export const metadata = {
-  title: "Collab Junction",
-  description: "AI-Powered Authentic Branding",
-  generator: 'v0.dev'
-}
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
-      <html lang="en">
+    <html lang="en">
+      <head>
         <script src="https://cdn.tailwindcss.com"></script>
-
-        <body className="bg-black min-h-screen">
-          <div className="max-w-7xl mx-auto px-4">
-            <Provider>
-              {children}
-
-            </Provider>
-          </div>
-        </body>
-      </html>
-    </ClerkProvider>
-  )
+      </head>
+      <body className="bg-black min-h-screen">
+        <div className="max-w-7xl mx-auto px-4">
+          <SessionProvider>{children}</SessionProvider>
+        </div>
+      </body>
+    </html>
+  );
 }

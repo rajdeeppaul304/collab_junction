@@ -1,5 +1,6 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function HomePage() {
   const creators = [
@@ -40,12 +41,17 @@ export default function HomePage() {
               string meat.
             </p>
             <div className="flex gap-4">
-              <Button variant="outline" className="bg-white text-black hover:bg-gray-200 rounded-full px-8">
-                I&apos;m a Creator
-              </Button>
-              <Button className="bg-yellow-400 text-black hover:bg-yellow-500 rounded-full px-8">
-                I&apos;m a Brand
-              </Button>
+              <Link href="/sign-upcreator">
+                <button className="bg-white text-black hover:bg-gray-200 rounded-full px-8 border border-black">
+                  I&apos;m a Creator
+                </button>
+              </Link>
+
+              <Link href="/sign-upbrand">
+                <button className="bg-yellow-400 text-black hover:bg-yellow-500 rounded-full px-8">
+                  I&apos;m a Brand
+                </button>
+              </Link>
             </div>
           </div>
         </div>

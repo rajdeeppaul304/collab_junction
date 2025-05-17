@@ -1,4 +1,4 @@
-import { db } from "@/configs/db"
+import { db } from "@/lib/db"
 import { productsTable, brandsTable, usersTable } from "@/configs/schema"
 import { eq, desc, and, like } from "drizzle-orm"
 import { NextResponse } from "next/server"
