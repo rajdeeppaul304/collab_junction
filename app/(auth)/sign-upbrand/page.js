@@ -28,7 +28,7 @@ export default function BrandSignup() {
       return;
     }
 
-    router.push("/signin");
+    router.push("/signin?signup=success&verified=false");
   }
 
   function handleChange(e) {
@@ -36,28 +36,9 @@ export default function BrandSignup() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#f7f9fc",
-        padding: "1rem",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 400,
-          padding: "2rem",
-          backgroundColor: "#fff",
-          borderRadius: 8,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          boxSizing: "border-box",
-        }}
-      >
-        <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>Brand Signup</h2>
+    <div style={styles.container}>
+      <div style={styles.formBox}>
+        <h2 style={styles.title}>Brand Signup</h2>
         <form onSubmit={handleSubmit}>
           <input
             name="name"
@@ -65,16 +46,7 @@ export default function BrandSignup() {
             value={form.name}
             onChange={handleChange}
             required
-            style={{
-              display: "block",
-              marginBottom: 16,
-              width: "100%",
-              padding: "0.75rem 1rem",
-              fontSize: "1rem",
-              borderRadius: 4,
-              border: "1px solid #ccc",
-              boxSizing: "border-box",
-            }}
+            style={styles.input}
           />
           <input
             name="email"
@@ -83,16 +55,7 @@ export default function BrandSignup() {
             value={form.email}
             onChange={handleChange}
             required
-            style={{
-              display: "block",
-              marginBottom: 16,
-              width: "100%",
-              padding: "0.75rem 1rem",
-              fontSize: "1rem",
-              borderRadius: 4,
-              border: "1px solid #ccc",
-              boxSizing: "border-box",
-            }}
+            style={styles.input}
           />
           <input
             name="password"
@@ -101,49 +64,79 @@ export default function BrandSignup() {
             value={form.password}
             onChange={handleChange}
             required
-            style={{
-              display: "block",
-              marginBottom: 24,
-              width: "100%",
-              padding: "0.75rem 1rem",
-              fontSize: "1rem",
-              borderRadius: 4,
-              border: "1px solid #ccc",
-              boxSizing: "border-box",
-            }}
+            style={styles.input}
           />
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "0.75rem",
-              fontSize: "1rem",
-              fontWeight: "600",
-              color: "#fff",
-              backgroundColor: loading ? "#999" : "#0070f3",
-              border: "none",
-              borderRadius: 4,
-              cursor: loading ? "not-allowed" : "pointer",
-              transition: "background-color 0.2s ease",
-            }}
-          >
+          <button type="submit" disabled={loading} style={loading ? styles.buttonDisabled : styles.button}>
             {loading ? "Signing up..." : "Sign Up as Brand"}
           </button>
-          {error && (
-            <p
-              style={{
-                color: "red",
-                marginTop: 16,
-                textAlign: "center",
-                fontWeight: "500",
-              }}
-            >
-              {error}
-            </p>
-          )}
+          {error && <p style={styles.error}>{error}</p>}
         </form>
       </div>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    minHeight: "100vh",
+    backgroundColor: "#f0f4f8",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "1rem",
+  },
+  formBox: {
+    width: "100%",
+    maxWidth: 400,
+    backgroundColor: "#fff",
+    padding: "2rem",
+    borderRadius: 8,
+    boxShadow: "0 6px 15px rgba(0,0,0,0.1)",
+  },
+  title: {
+    marginBottom: "1.5rem",
+    fontSize: "1.8rem",
+    fontWeight: "700",
+    color: "#333",
+    textAlign: "center",
+  },
+  input: {
+    width: "100%",
+    padding: "0.75rem 1rem",
+    marginBottom: "1rem",
+    borderRadius: 6,
+    border: "1.5px solid #ccc",
+    fontSize: "1rem",
+    outlineColor: "#0070f3",
+    boxSizing: "border-box",
+  },
+  button: {
+    width: "100%",
+    padding: "0.75rem",
+    backgroundColor: "#0070f3",
+    border: "none",
+    borderRadius: 6,
+    color: "#fff",
+    fontSize: "1rem",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease",
+  },
+  buttonDisabled: {
+    width: "100%",
+    padding: "0.75rem",
+    backgroundColor: "#6c8edf",
+    border: "none",
+    borderRadius: 6,
+    color: "#eee",
+    fontSize: "1rem",
+    fontWeight: "600",
+    cursor: "not-allowed",
+  },
+  error: {
+    marginTop: "1rem",
+    color: "red",
+    fontWeight: "500",
+    textAlign: "center",
+  },
+};

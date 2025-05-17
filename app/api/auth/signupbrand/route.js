@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
 import { usersTable } from "@/configs/schema";
-import { eq } from "drizzle-orm";
 
 export async function POST(req) {
   try {
@@ -15,7 +14,7 @@ export async function POST(req) {
     const existingUser = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.email, email))
+      .where(usersTable.email.eq(email))
       .limit(1);
 
     if (existingUser.length > 0) {
@@ -29,6 +28,7 @@ export async function POST(req) {
       email,
       password: hashedPassword,
       role: "brand",
+
     }).returning({ id: usersTable.id });
 
     return NextResponse.json({ message: "User registered", userId: inserted[0].id }, { status: 201 });
@@ -37,3 +37,4 @@ export async function POST(req) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
