@@ -1,6 +1,22 @@
+"use client"
 import React from 'react'
+import { useSession } from 'next-auth/react'
 
-function page() {
+function Page() {
+  const { data: session, status } = useSession()
+
+  React.useEffect(() => {
+    console.log('Session details:', session)
+  }, [session])
+
+  if (status === 'loading') {
+    return <p>Loading...</p>
+  }
+
+  if (!session) {
+    return <p>You are not logged in.</p>
+  }
+
   return (
     <div>
       <h1>Dashboard</h1>
@@ -11,4 +27,4 @@ function page() {
   )
 }
 
-export default page
+export default Page

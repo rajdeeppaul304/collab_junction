@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signIn, getSession, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function SignIn() {
@@ -13,7 +13,6 @@ export default function SignIn() {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user?.role) {
-      // Redirect after successful login (credentials or Google)
       if (session.user.role === "brand") {
         router.push("/dashboard1");
       } else if (session.user.role === "creator") {
@@ -44,19 +43,24 @@ export default function SignIn() {
     if (res.error) {
       setError(res.error);
     }
-    // no redirect here — the useEffect will catch session update and redirect
   };
 
   const handleGoogleSignIn = () => {
     signIn("google");
-    // No redirect here either — handled by useEffect when session updates
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.box}>
-        <h2 style={styles.title}>Sign In</h2>
-        <form onSubmit={handleSubmit}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-md">
+        <h2 className="text-2xl font-semibold text-black text-center mb-6">Sign In</h2>
+
+        {error && (
+          <p className="mb-4 p-3 bg-red-100 text-red-700 border border-red-700 rounded text-center">
+            {error}
+          </p>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             name="email"
             type="email"
@@ -64,7 +68,7 @@ export default function SignIn() {
             value={form.email}
             onChange={handleChange}
             required
-            style={styles.input}
+            className="w-full px-4 py-3 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
             name="password"
@@ -73,83 +77,30 @@ export default function SignIn() {
             value={form.password}
             onChange={handleChange}
             required
-            style={styles.input}
+            className="w-full px-4 py-3 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <button type="submit" disabled={loading} style={styles.button}>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 rounded-md font-semibold transition-colors ${
+              loading
+                ? "bg-blue-300 cursor-not-allowed text-black"
+                : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+            }`}
+          >
             {loading ? "Signing in..." : "Sign In"}
           </button>
-          {error && <p style={styles.error}>{error}</p>}
         </form>
 
-        <div style={styles.divider}>or</div>
+        <div className="my-6 text-center text-gray-500 font-medium">or</div>
 
-        <button onClick={handleGoogleSignIn} style={styles.googleButton}>
+        <button
+          onClick={handleGoogleSignIn}
+          className="w-full py-3 border border-gray-300 rounded-md font-semibold text-black hover:bg-gray-100 transition-colors"
+        >
           Sign in with Google
         </button>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#f5f5f5",
-  },
-  box: {
-    width: "100%",
-    maxWidth: 400,
-    padding: 30,
-    borderRadius: 12,
-    background: "#fff",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-  },
-  title: {
-    textAlign: "center",
-    marginBottom: 20,
-    fontSize: 24,
-    fontWeight: 600,
-  },
-  input: {
-    display: "block",
-    width: "100%",
-    padding: 10,
-    marginBottom: 12,
-    borderRadius: 6,
-    border: "1px solid #ccc",
-    fontSize: 16,
-  },
-  button: {
-    width: "100%",
-    padding: 12,
-    background: "#0070f3",
-    color: "#fff",
-    fontWeight: 600,
-    border: "none",
-    borderRadius: 6,
-    cursor: "pointer",
-  },
-  error: {
-    marginTop: 10,
-    color: "red",
-    textAlign: "center",
-  },
-  divider: {
-    margin: "20px 0",
-    textAlign: "center",
-    color: "#888",
-  },
-  googleButton: {
-    width: "100%",
-    padding: 12,
-    background: "#fff",
-    color: "#333",
-    fontWeight: 600,
-    border: "1px solid #ccc",
-    borderRadius: 6,
-    cursor: "pointer",
-  },
-};

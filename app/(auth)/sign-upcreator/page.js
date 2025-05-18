@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function CreatorSignup() {
+export default function BrandSignup() {
   const router = useRouter();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState(null);
@@ -14,21 +14,26 @@ export default function CreatorSignup() {
     setError(null);
     setLoading(true);
 
-    const res = await fetch("/api/auth/signupcreator", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch("/api/auth/signupcreator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
-    setLoading(false);
+      const data = await res.json();
+      setLoading(false);
 
-    if (!res.ok) {
-      setError(data.error || "Signup failed");
-      return;
+      if (!res.ok) {
+        setError(data.error || "Signup failed");
+        return;
+      }
+
+      router.push(`/verify-otp?email=${encodeURIComponent(form.email)}`);
+    } catch (err) {
+      setLoading(false);
+      setError("Something went wrong. Please try again.");
     }
-
-    router.push("/signin");
   }
 
   function handleChange(e) {
@@ -36,47 +41,19 @@ export default function CreatorSignup() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#f7f9fc",
-        padding: "1rem",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 400,
-          padding: "2rem",
-          backgroundColor: "#fff",
-          borderRadius: 8,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          boxSizing: "border-box",
-        }}
-      >
-        <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+    <div className="min-h-screen bg-gray-100 flex justify-center items-center p-4">
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold mb-6 text-black text-center">
           Creator Signup
         </h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             name="name"
             placeholder="Name"
             value={form.name}
             onChange={handleChange}
             required
-            style={{
-              display: "block",
-              marginBottom: 16,
-              width: "100%",
-              padding: "0.75rem 1rem",
-              fontSize: "1rem",
-              borderRadius: 4,
-              border: "1px solid #ccc",
-              boxSizing: "border-box",
-            }}
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
           />
           <input
             name="email"
@@ -85,16 +62,7 @@ export default function CreatorSignup() {
             value={form.email}
             onChange={handleChange}
             required
-            style={{
-              display: "block",
-              marginBottom: 16,
-              width: "100%",
-              padding: "0.75rem 1rem",
-              fontSize: "1rem",
-              borderRadius: 4,
-              border: "1px solid #ccc",
-              boxSizing: "border-box",
-            }}
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
           />
           <input
             name="password"
@@ -103,50 +71,24 @@ export default function CreatorSignup() {
             value={form.password}
             onChange={handleChange}
             required
-            style={{
-              display: "block",
-              marginBottom: 24,
-              width: "100%",
-              padding: "0.75rem 1rem",
-              fontSize: "1rem",
-              borderRadius: 4,
-              border: "1px solid #ccc",
-              boxSizing: "border-box",
-            }}
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
           />
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: "100%",
-              padding: "0.75rem",
-              fontSize: "1rem",
-              fontWeight: "600",
-              color: "#fff",
-              backgroundColor: loading ? "#999" : "#0070f3",
-              border: "none",
-              borderRadius: 4,
-              cursor: loading ? "not-allowed" : "pointer",
-              transition: "background-color 0.2s ease",
-            }}
+            className={`w-full py-3 rounded-md font-semibold text-white transition-colors ${
+              loading
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
             {loading ? "Signing up..." : "Sign Up as Creator"}
           </button>
           {error && (
-            <p
-              style={{
-                color: "red",
-                marginTop: 16,
-                textAlign: "center",
-                fontWeight: "500",
-              }}
-            >
-              {error}
-            </p>
+            <p className="text-center text-red-600 font-medium mt-4">{error}</p>
           )}
         </form>
       </div>
     </div>
   );
 }
-

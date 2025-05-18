@@ -13,7 +13,10 @@ export const usersTable = pgTable("users", {
   role: roleEnum("role").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  otp: text("otp"),                        // <-- New
+  otp_expiry: timestamp("otp_expiry"), 
 })
+
 
 // Brands table for brand-specific information
 // export const brandsTable = pgTable("brands", {
@@ -157,3 +160,12 @@ export const usersTable = pgTable("users", {
 //     references: [productsTable.id],
 //   }),
 // }))
+export const pendingOtpTable = pgTable("pending_otp", {
+  email: text("email").primaryKey(), // Assuming one OTP per email at a time
+  name: text("name").notNull(),
+  password: text("password").notNull(),
+  otp: text("otp").notNull(),
+  otp_expiry: timestamp("otp_expiry", { withTimezone: true }).notNull(),
+  role: roleEnum("role").notNull(),
+
+});

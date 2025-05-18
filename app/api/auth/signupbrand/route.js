@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
-import { usersTable } from "@/configs/schema";
+import { usersTable, pendingOtpTable } from "@/configs/schema";
+import { eq } from "drizzle-orm";
+import { sendOtpEmail } from "@/lib/mail/sendotp";
 
 export async function POST(req) {
   try {
@@ -11,30 +12,36 @@ export async function POST(req) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const existingUser = await db
+    const existingUserResult = await db
       .select()
       .from(usersTable)
-      .where(usersTable.email.eq(email))
-      .limit(1);
+      .where(eq(usersTable.email, email));
 
-    if (existingUser.length > 0) {
+    const existingUser = existingUserResult[0];
+
+    if (existingUser) {
       return NextResponse.json({ error: "Email already registered" }, { status: 400 });
     }
 
-    const hashedPassword = await hash(password, 10);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    const inserted = await db.insert(usersTable).values({
+    await db.delete(pendingOtpTable).where(eq(pendingOtpTable.email, email));
+
+    await db.insert(pendingOtpTable).values({
       name,
       email,
-      password: hashedPassword,
+      password,
+      otp,
+      otp_expiry: otpExpiry,
       role: "brand",
+    });
 
-    }).returning({ id: usersTable.id });
+    await sendOtpEmail({ email, otp });
 
-    return NextResponse.json({ message: "User registered", userId: inserted[0].id }, { status: 201 });
+    return NextResponse.json({ message: "OTP sent to email" }, { status: 200 });
   } catch (error) {
-    console.error(error);
+    console.error("Signup Error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
-

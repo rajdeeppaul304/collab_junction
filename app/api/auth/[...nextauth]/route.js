@@ -15,23 +15,20 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const { email, password } = credentials;
+        if (!credentials?.email || !credentials?.password) return null;
 
-        // Find user in DB
         const users = await db
           .select()
           .from(usersTable)
-          .where(eq(usersTable.email, email))
+          .where(eq(usersTable.email, credentials.email))
           .limit(1);
 
         const user = users[0];
         if (!user) return null;
 
-        // Validate password
-        const isValid = await compare(password, user.password);
+        const isValid = await compare(credentials.password, user.password);
         if (!isValid) return null;
 
-        // Return safe user data
         return {
           id: user.id,
           name: user.name,
@@ -50,22 +47,22 @@ export const authOptions = {
   callbacks: {
     async signIn({ user, account }) {
       if (account.provider === "google") {
-        // Allow Google login only for registered users
         const users = await db
           .select()
           .from(usersTable)
           .where(eq(usersTable.email, user.email))
           .limit(1);
 
-        return users.length > 0; // true = allow, false = deny
+        if (users.length === 0) {
+          // Block sign-in if user with this email doesn't exist
+          return false;
+        }
       }
-
       return true;
     },
 
     async jwt({ token, user, account }) {
       if (account?.provider === "google") {
-        // Fetch user from DB to get role
         const users = await db
           .select()
           .from(usersTable)
@@ -73,14 +70,16 @@ export const authOptions = {
           .limit(1);
 
         const dbUser = users[0];
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.role = dbUser.role;
+        if (!dbUser) {
+          // User not found, reject token
+          return null;
         }
+
+        token.id = dbUser.id;
+        token.role = dbUser.role;
       }
 
       if (user && account?.provider !== "google") {
-        // Credentials login
         token.id = user.id;
         token.role = user.role;
       }
@@ -89,7 +88,6 @@ export const authOptions = {
     },
 
     async session({ session, token }) {
-      // Add user id and role to session
       if (token) {
         session.user.id = token.id;
         session.user.role = token.role;

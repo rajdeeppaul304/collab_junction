@@ -1,21 +1,26 @@
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
+'use client'
+
+import { useSession } from 'next-auth/react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export default function HomePage() {
+  const { data: session } = useSession()
+
   const creators = [
-    { name: "Priter Pete", followers: "20k Followers", image: "/placeholder.svg?height=300&width=300" },
-    { name: "Radaan Maini", followers: "25k Followers", image: "/placeholder.svg?height=300&width=300" },
-    { name: "Raiana Knight", followers: "37k Followers", image: "/placeholder.svg?height=300&width=300" },
-    { name: "Rani Vankov", followers: "31k Followers", image: "/placeholder.svg?height=300&width=300" },
+    { name: 'Priter Pete', followers: '20k Followers', image: '/placeholder.svg?height=300&width=300' },
+    { name: 'Radaan Maini', followers: '25k Followers', image: '/placeholder.svg?height=300&width=300' },
+    { name: 'Raiana Knight', followers: '37k Followers', image: '/placeholder.svg?height=300&width=300' },
+    { name: 'Rani Vankov', followers: '31k Followers', image: '/placeholder.svg?height=300&width=300' }
   ]
 
   const brands = [
-    { name: "Starbucks", image: "/placeholder.svg?height=100&width=100" },
-    { name: "Jack Daniels", image: "/placeholder.svg?height=100&width=100" },
-    { name: "Coca Cola", image: "/placeholder.svg?height=100&width=100" },
-    { name: "Nike", image: "/placeholder.svg?height=100&width=100" },
-    { name: "Red Bull", image: "/placeholder.svg?height=100&width=100" },
+    { name: 'Starbucks', image: '/placeholder.svg?height=100&width=100' },
+    { name: 'Jack Daniels', image: '/placeholder.svg?height=100&width=100' },
+    { name: 'Coca Cola', image: '/placeholder.svg?height=100&width=100' },
+    { name: 'Nike', image: '/placeholder.svg?height=100&width=100' },
+    { name: 'Red Bull', image: '/placeholder.svg?height=100&width=100' }
   ]
 
   return (
@@ -32,27 +37,29 @@ export default function HomePage() {
           <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-8">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
               Easy Way to <span className="text-yellow-400">collaborate</span> with <br />
-              <span className="text-yellow-400">brands</span> and grow as a{" "}
-              <span className="text-yellow-400">creator</span>
+              <span className="text-yellow-400">brands</span> and grow as a <span className="text-yellow-400">creator</span>
             </h1>
             <p className="text-gray-300 max-w-3xl mb-8 text-sm">
               Pizza ipsum dolor meat lovers buffalo. Extra crust string ham peppers. Buffalo topping thin crust white
               large mozzarella. Pesto wing marinara ham tomato. Garlic parmesan banana garlic pineapple mushrooms bell
               string meat.
             </p>
-            <div className="flex gap-4">
-              <Link href="/sign-upcreator">
-                <button className="bg-white text-black hover:bg-gray-200 rounded-full px-8 border border-black">
-                  I&apos;m a Creator
-                </button>
-              </Link>
 
-              <Link href="/sign-upbrand">
-                <button className="bg-yellow-400 text-black hover:bg-yellow-500 rounded-full px-8">
-                  I&apos;m a Brand
-                </button>
-              </Link>
-            </div>
+            {/* sign-up buttons visible only when no active session */}
+            {!session && (
+              <div className="flex gap-4">
+                <Link href="/sign-upcreator">
+                  <button className="bg-white text-black hover:bg-gray-200 rounded-full px-8 border border-black">
+                    I&apos;m a Creator
+                  </button>
+                </Link>
+                <Link href="/sign-upbrand">
+                  <button className="bg-yellow-400 text-black hover:bg-yellow-500 rounded-full px-8">
+                    I&apos;m a Brand
+                  </button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -67,83 +74,53 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+
+        {/* what we offer (creator) */}
         <div className="bg-[#111] rounded-3xl p-6">
           <h2 className="text-2xl font-bold text-white mb-6">What do we offer?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-[#222] rounded-xl p-4">
-              <div className="flex justify-center mb-2">
-                <div className="bg-[#333] p-2 rounded-full">
-                  <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z" />
-                    <path d="M10 5a1 1 0 100 2 1 1 0 000-2zm0 3a1 1 0 00-1 1v3a1 1 0 002 0V9a1 1 0 00-1-1z" />
-                  </svg>
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="bg-[#222] rounded-xl p-4">
+                <div className="flex justify-center mb-2">
+                  <div className="bg-[#333] p-2 rounded-full">
+                    <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 2a8 8 0 100 16 8 8 0 000-16z" />
+                      <path d="M10 5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 00-1 1v3a1 1 0 002 0V11a1 1 0 00-1-1z" />
+                    </svg>
+                  </div>
                 </div>
+                <h3 className="text-center text-white font-semibold mb-2">Benefit</h3>
+                <p className="text-gray-400 text-xs">
+                  Pizza ipsum dolor meat lovers buffalo. Chicken spinach pineapple meatball fresh string tomatoes.
+                </p>
               </div>
-              <h3 className="text-center text-white font-semibold mb-2">Benefit</h3>
-              <p className="text-gray-400 text-xs">
-                Pizza ipsum dolor meat lovers buffalo. Chicken spinach pineapple meatball fresh string tomatoes. Toasted
-                fresh style mushroom bbq sautéed style lasagna stuffed. Ranch melted mayo style meat. Ricotta personal
-                mayo pizza tomato lovers. String lasagna chicken string melted black olives.
-              </p>
-            </div>
-            <div className="bg-[#222] rounded-xl p-4">
-              <div className="flex justify-center mb-2">
-                <div className="bg-[#333] p-2 rounded-full">
-                  <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-center text-white font-semibold mb-2">Benefit</h3>
-              <p className="text-gray-400 text-xs">
-                Pizza ipsum dolor meat lovers buffalo. Chicken spinach pineapple meatball fresh string tomatoes. Toasted
-                fresh style mushroom bbq sautéed style lasagna stuffed. Ranch melted mayo style meat. Ricotta personal
-                mayo pizza tomato lovers. String lasagna chicken string melted black olives.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Brand Section */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* what we offer (brand) */}
         <div className="bg-[#111] rounded-3xl p-6">
           <h2 className="text-2xl font-bold text-white mb-6">What do we offer?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-[#222] rounded-xl p-4">
-              <div className="flex justify-center mb-2">
-                <div className="bg-[#333] p-2 rounded-full">
-                  <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.536 5.879a1 1 0 001.415 0 3 3 0 014.242 0 1 1 0 001.415-1.415 5 5 0 00-7.072 0 1 1 0 000 1.415z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="bg-[#222] rounded-xl p-4">
+                <div className="flex justify-center mb-2">
+                  <div className="bg-[#333] p-2 rounded-full">
+                    <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 2a8 8 0 100 16 8 8 0 000-16z" />
+                      <path d="M10 5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 00-1 1v3a1 1 0 002 0V11a1 1 0 00-1-1z" />
+                    </svg>
+                  </div>
                 </div>
+                <h3 className="text-center text-white font-semibold mb-2">Benefit</h3>
+                <p className="text-gray-400 text-xs">
+                  Pizza ipsum dolor meat lovers buffalo. Chicken spinach pineapple meatball fresh string tomatoes.
+                </p>
               </div>
-              <h3 className="text-center text-white font-semibold mb-2">Benefit</h3>
-              <p className="text-gray-400 text-xs">
-                Pizza ipsum dolor meat lovers buffalo. Chicken spinach pineapple meatball fresh string tomatoes. Toasted
-                fresh style mushroom bbq sautéed style lasagna stuffed. Ranch melted mayo style meat. Ricotta personal
-                mayo pizza tomato lovers. String lasagna chicken string melted black olives.
-              </p>
-            </div>
-            <div className="bg-[#222] rounded-xl p-4">
-              <div className="flex justify-center mb-2">
-                <div className="bg-[#333] p-2 rounded-full">
-                  <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z" />
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-center text-white font-semibold mb-2">Benefit</h3>
-              <p className="text-gray-400 text-xs">
-                Pizza ipsum dolor meat lovers buffalo. Chicken spinach pineapple meatball fresh string tomatoes. Toasted
-                fresh style mushroom bbq sautéed style lasagna stuffed. Ranch melted mayo style meat. Ricotta personal
-                mayo pizza tomato lovers. String lasagna chicken string melted black olives.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
         <div className="bg-[#111] rounded-3xl overflow-hidden">
@@ -160,13 +137,13 @@ export default function HomePage() {
       <section>
         <h2 className="text-2xl font-bold text-white mb-6">Brand Collaborations</h2>
         <div className="flex flex-wrap justify-center gap-4">
-          {brands.map((brand, index) => (
-            <div key={index} className="w-20 h-20 relative">
+          {brands.map((brand, i) => (
+            <div key={i} className="w-20 h-20 relative">
               <div className="absolute inset-0 rounded-full border-2 border-dashed border-white/30 p-1">
                 <div className="w-full h-full rounded-full overflow-hidden">
                   <Image
-                    src={brand.image || "/placeholder.svg"}
-                    alt={brand.name}
+                    src={brand.image}
+                    alt={`Logo of ${brand.name}`}
                     width={80}
                     height={80}
                     className="object-cover"
@@ -182,10 +159,10 @@ export default function HomePage() {
       <section>
         <h2 className="text-2xl font-bold text-white mb-6">Creator Spotlight</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {creators.map((creator, index) => (
-            <div key={index} className="bg-[#111] rounded-xl overflow-hidden">
+          {creators.map((creator, i) => (
+            <div key={i} className="bg-[#111] rounded-xl overflow-hidden">
               <div className="relative h-48">
-                <Image src={creator.image || "/placeholder.svg"} alt={creator.name} fill className="object-cover" />
+                <Image src={creator.image} alt={`Image of ${creator.name}`} fill className="object-cover" />
                 <div className="absolute top-2 right-2 bg-yellow-400 rounded-full p-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -217,13 +194,15 @@ export default function HomePage() {
             </div>
             <h3 className="text-white font-bold mb-4">For Creators</h3>
             <p className="text-gray-400 text-sm mb-6">
-              Pizza ipsum dolor meat lovers buffalo. Chicken spinach pineapple meatball fresh string tomatoes. Toasted
-              fresh style mushroom bbq sautéed style lasagna stuffed. Ranch melted mayo style meat. Ricotta personal
-              mayo pizza tomato lovers.
+              Pizza ipsum dolor meat lovers buffalo. Chicken spinach pineapple meatball fresh string tomatoes.
             </p>
-            <Button variant="outline" className="bg-white text-black hover:bg-gray-200 rounded-full px-8">
-              I&apos;m a Creator
-            </Button>
+
+            {/* CTA buttons hidden if logged in */}
+            {!session && (
+              <Button variant="outline" className="bg-white text-black hover:bg-gray-200 rounded-full px-8">
+                I&apos;m a Creator
+              </Button>
+            )}
           </div>
 
           <div className="text-center">
@@ -240,11 +219,14 @@ export default function HomePage() {
             </div>
             <h3 className="text-white font-bold mb-4">For Brands</h3>
             <p className="text-gray-400 text-sm mb-6">
-              Pizza ipsum dolor meat lovers buffalo. Chicken spinach pineapple meatball fresh string tomatoes. Toasted
-              fresh style mushroom bbq sautéed style lasagna stuffed. Ranch melted mayo style meat. Ricotta personal
-              mayo pizza tomato lovers.
+              Pizza ipsum dolor meat lovers buffalo. Chicken spinach pineapple meatball fresh string tomatoes.
             </p>
-            <Button className="bg-yellow-400 text-black hover:bg-yellow-500 rounded-full px-8">I&apos;m a Brand</Button>
+
+            {!session && (
+              <Button className="bg-yellow-400 text-black hover:bg-yellow-500 rounded-full px-8">
+                I&apos;m a Brand
+              </Button>
+            )}
           </div>
         </div>
       </section>
