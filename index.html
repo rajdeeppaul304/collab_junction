@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Exam Progress Tracker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1f4037, #99f2c8);
+      color: #fff;
+      min-height: 100vh;
+      padding: 2rem;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      animation: slideDown 0.8s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .subject {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .subject:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .subject h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      padding: 0.8rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .subject h2::after {
+      content: "▼";
+      font-size: 0.8rem;
+      transition: transform 0.3s ease;
+    }
+
+    .subject h2:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .subject.active h2::after {
+      transform: rotate(180deg);
+    }
+
+    .units {
+      margin-top: 1rem;
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .unit {
+      margin-bottom: 1rem;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 0.8rem;
+      border-left: 4px solid #99f2c8;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .unit:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateX(5px);
+    }
+
+    .unit h3 {
+      margin: 0;
+      font-size: 1rem;
+      padding: 0.6rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      gap: 0.5rem;
+    }
+
+    .unit h3::after {
+      content: "▼";
+      font-size: 0.7rem;
+      transition: transform 0.3s ease;
+    }
+
+    .unit h3:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .unit.active h3::after {
+      transform: rotate(180deg);
+    }
+
+    .topics {
+      margin-top: 0.8rem;
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    label:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Custom checkbox */
+    input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      margin-right: 0.8rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    input[type="checkbox"]:checked {
+      background-color: #99f2c8;
+      border-color: #99f2c8;
+    }
+
+    input[type="checkbox"]:checked::after {
+      content: "✓";
+      position: absolute;
+      color: #1f4037;
+      font-size: 14px;
+      font-weight: bold;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Progress bar for units */
+    .progress-container {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #99f2c8;
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    /* Master checkbox label */
+    .master-checkbox {
+      display: flex;
+      align-items: center;
+      padding: 0.6rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    .master-checkbox:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Loading spinner */
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(31, 64, 55, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-top: 5px solid #99f2c8;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 1rem;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      body {
+        padding: 1rem;
+      }
+
+      .subject h2 {
+        font-size: 1.1rem;
+      }
+
+      .unit h3 {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading your progress...</div>
+  </div>
+
+  <div class="container">
+    <h1>Exam Progress Tracker</h1>
+    <div id="subjects"></div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+const data = {
+  "Computer Graphics (CG) - ICT202 - 03/06/2025": [
+    {
+      title: "UNIT I",
+      topics: [
+        "Introduction to graphics and types of graphics",
+        "Quality parameters of graphics display",
+        "DDA line algorithm",
+        "Bresenham's line algorithm",
+        "Bresenham's circle algorithm",
+        "Midpoint circle algorithm",
+        "Midpoint ellipse algorithm",
+        "Conic Sections",
+        "Cohen Sutherland line clipping",
+        "Sutherland Hodgeman polygon clipping",
+        "Polygon filling",
+        "Attributes of Output primitives",
+        "Antialiasing"
+      ]
+    },
+    {
+      title: "UNIT II",
+      topics: [
+        "2D and 3D geometric manipulation",
+        "Window to viewport transformations",
+        "Homogeneous coordinates",
+        "Parallel and perspective projections",
+        "Hermite curve generation",
+        "Bezier curves",
+        "B-spline curves",
+        "Surface generation: wireframe, surface, solid modeling",
+        "3D polygon surfaces",
+        "Polygon tables and meshes"
+      ]
+    },
+    {
+      title: "UNIT III",
+      topics: [
+        "Z-buffer algorithm",
+        "A-buffer algorithm",
+        "Scanline algorithm",
+        "Area subdivision algorithm",
+        "Achromatic & color models",
+        "Local and global illumination models",
+        "Lambert shading",
+        "Gouraud shading",
+        "Phong shading"
+      ]
+    },
+    {
+      title: "UNIT IV",
+      topics: [
+        "Ray casting",
+        "Ray tracing",
+        "Recursive ray tracing",
+        "Shadows",
+        "Fractals",
+        "Fractal generation",
+        "Grammar-based modeling"
+      ]
+    }
+  ],
+  "Design and Analysis of Algorithms - ICT206 - 05/06/2025": [
+    {
+      title: "UNIT I",
+      topics: [
+        "Growth of Functions",
+        "Summations",
+        "Algorithm Design Paradigms",
+        "Divide and Conquer Strategy",
+        "Strassen’s algorithm for matrix multiplication",
+        "Analysis of Merge sort",
+        "Quick Sort",
+        "Heap Sort",
+        "Counting sort",
+        "Radix Sort",
+        "Bucket Sort",
+        "Medians and Order Statistics",
+        "Disjoint Set operations",
+        "Rooted Tree Representations",
+        "Linked List representation of disjoint sets",
+        "Disjoint set forests"
+      ]
+    },
+    {
+      title: "UNIT II",
+      topics: [
+        "Matrix Chain Multiplication",
+        "LCS",
+        "Optimal Binary Search Tree",
+        "Greedy vs Dynamic Programming approach",
+        "Knapsack problem",
+        "Huffman Coding Problem",
+        "Matroids",
+        "Naïve String Matching Algorithm",
+        "Rabin Karp Algorithm",
+        "String Matching with Finite Automata",
+        "Knuth Morris Pratt Algorithm"
+      ]
+    },
+    {
+      title: "UNIT III",
+      topics: [
+        "Representation of Graphs",
+        "Breadth First Search",
+        "Depth First Search",
+        "Topological Sort",
+        "Strongly Connected Components",
+        "Kruskal’s Algorithm",
+        "Prim’s Algorithm",
+        "Dijkstra’s Algorithm",
+        "Bellman-Ford Algorithm",
+        "All pair shortest path",
+        "Floyd Warshall Algorithm"
+      ]
+    },
+    {
+      title: "UNIT IV",
+      topics: [
+        "NP-Complete Problems",
+        "Polynomial Time Verification",
+        "NP-Completeness",
+        "Satisfiability and Reducibility",
+        "NP Completeness proof",
+        "Vertex-cover problem",
+        "Traveling-salesman problem",
+        "Set-covering problem",
+        "Hamilton Circuit Problem"
+      ]
+    }
+  ],
+  "Computer Networks - ICT212 - 10/06/2025": [
+  {
+    title: "UNIT I",
+    topics: [
+      "Overview; protocol suites: TCP/IP and OSI, History, Standard",
+      "Application Layer paradigm",
+      "Client-server paradigm",
+      "Standard Client Server Applications",
+      "P2P",
+      "Socket Interface programming",
+      "Transport Layer Protocols: simple, stop-and-wait, GBN, Selective repeat, Bidirectional protocols",
+      "Internet Transport Layer protocols",
+      "UDP",
+      "TCP"
+    ]
+  },
+  {
+    title: "UNIT II",
+    topics: [
+      "Network Layer: Introduction, IPv4, ICMPv4",
+      "Unicast Routing",
+      "Multicast routing",
+      "IPV6",
+      "ICMPv6",
+      "Data-Link Layer (Wired Networks): Introduction, DLC",
+      "Multiple Access Protocols",
+      "Wired LANS (Ethernet, others)"
+    ]
+  },
+  {
+    title: "UNIT III",
+    topics: [
+      "Data-Link Layer (Wireless Networks): IEEE 802.11, Bluetooth, WiMAX, Cellular telephony, Satellite Networks",
+      "Mobile IP",
+      "Physical Layer and Transmission Media: Data and Signals",
+      "Digital Transmission",
+      "Analog Transmission",
+      "Bandwidth utilization",
+      "Transmission Media",
+      "Multimedia and QoS: Data types, audio/video streaming, real-time protocols, Quality of Service"
+    ]
+  },
+  {
+    title: "UNIT IV",
+    topics: [
+      "Network Management: SNMP, ASN.1",
+      "Security: Ciphers",
+      "Application layer security",
+      "Transport layer security",
+      "Network layer security",
+      "Packet filter firewall",
+      "Proxy firewall",
+      "Programming: Socket programming"
+    ]
+  }
+],
+
+  "Theory of Computation - ICT208 - 14/06/2025 ": [
+    {
+      title: "UNIT I",
+      topics: [
+        "Chomsky Classification",
+        "Finite Automata",
+        "Deterministic Finite Automata (DFA)",
+        "Non-Deterministic Finite Automata (NFA)",
+        "Regular Expressions",
+        "Equivalence of DFAs, NFAs and Regular Expressions",
+        "Closure properties of Regular grammar",
+        "Non-Regular Languages",
+        "Pumping Lemma"
+      ]
+    },
+    {
+      title: "UNIT II",
+      topics: [
+        "Context Free Grammar (CFG)",
+        "Parse Trees",
+        "Push Down Automata (deterministic and non-deterministic)",
+        "Equivalence of CFGs and PDAs",
+        "Closure properties of CFLs",
+        "Pumping Lemma",
+        "Parsing",
+        "LL(K) grammar"
+      ]
+    },
+    {
+      title: "UNIT III",
+      topics: [
+        "Definition, design and extensions of Turing Machine",
+        "Equivalence of various Turing Machine Formalisms",
+        "Church – Turing Thesis",
+        "Decidability",
+        "Halting Problem",
+        "Reducibility",
+        "Rices theorem",
+        "Undecidability of Posts correspondence problem",
+        "Recursion Theorem"
+      ]
+    },
+    {
+      title: "UNIT IV",
+      topics: [
+        "Class P",
+        "NP, co-NP",
+        "Polynomial time reductions",
+        "NP-completeness",
+        "NP-hardness",
+        "Cook-Levin theorem",
+        "Space complexity",
+        "PSPACE and NPSPACE",
+        "Savitch theorem",
+        "Probabilistic computation",
+        "BPP class",
+        "Interactive proof systems and IP class",
+        "Relativized computation",
+        "Oracles"
+      ]
+    }
+  ],
+  "Computational Methods - ICT204 - 17/06/2025 ": [
+  {
+    title: "UNIT I",
+    topics: [
+      "Taylor Series, Rolle’s Theorem, Mean Value Theorem",
+      "Approximations and Errors in numerical computations",
+      "Data representation and computer arithmetic",
+      "Loss of significance in computation",
+      "Bisection method (convergence analysis and implementation)",
+      "Newton Method (convergence analysis and implementation)",
+      "Secant Method (convergence analysis and implementation)",
+      "Unconstrained minimization: Fibonacci search, Golden Section Search, Newton’s method",
+      "Multivariate minimization: method of steepest descent, Nelder-Mead Algorithm"
+    ]
+  },
+  {
+    title: "UNIT II",
+    topics: [
+      "Interpolation assumptions and errors",
+      "Finite differences",
+      "Gregory-Newton’s Forward Interpolation",
+      "Gregory-Newton’s Backward Interpolation",
+      "Lagrange’s Interpolation",
+      "Newton’s divided difference interpolation",
+      "Numerical Integration: Newton-Cote’s Quadrature formula",
+      "Trapezoidal Rule",
+      "Simpson’s one-third rule",
+      "Simpson’s three-eight rule",
+      "Errors in quadrature formulae",
+      "Romberg’s Algorithm",
+      "Gaussian Quadrature formula"
+    ]
+  },
+  {
+    title: "UNIT III",
+    topics: [
+      "System of Linear Algebraic Equations: Existence of solution",
+      "Gauss elimination method and computational effort",
+      "Pivoting concept",
+      "Gauss Jordan method and computational effort",
+      "Triangular Matrix factorization: Dolittle algorithm, Crout’s Algorithm, Cholesky method",
+      "Eigen value problem: Power method",
+      "Approximation by Spline Function: First-Degree and Second-Degree Splines",
+      "Natural Cubic Splines",
+      "B Splines",
+      "Interpolation and Approximation"
+    ]
+  }
+]
+,
+  "Software Engineering - ICT210 - 20/06/2025 ": [
+    {
+      title: "UNIT I",
+      topics: [
+        "Software processes and models (waterfall, incremental, spiral, prototype, reuse-oriented)",
+        "Process activities",
+        "Process improvement (CMM Levels)",
+        "Agile Development model",
+        "Plan driven vs agile model",
+        "Agile methods (user stories, refactoring, TDD, pair programming)",
+        "Agile project management (SCRUM)"
+      ]
+    },
+    {
+      title: "UNIT II",
+      topics: [
+        "Functional and non-functional requirements",
+        "Requirement elicitation",
+        "Use case development",
+        "Requirement analysis and validation",
+        "Requirement review/change",
+        "SRS document",
+        "Software Size estimation (LOC, function point)",
+        "Cost and effort estimation",
+        "COCOMO",
+        "ISO 9001:2015 Certification",
+        "System modeling: Use case diagram, sequence diagram, class diagram, ER diagram, DFDs, data dictionaries"
+      ]
+    },
+    {
+      title: "UNIT III",
+      topics: [
+        "Software Architecture views and patterns",
+        "Modularity (cohesion and coupling)",
+        "Information hiding",
+        "Functional independence",
+        "Function-oriented design",
+        "Object-oriented design",
+        "SOA",
+        "SAAS",
+        "McCall’s Quality Factors",
+        "ISO 9126 Quality Factors",
+        "Quality Control and Assurance",
+        "Software Reliability",
+        "Software Evolution and legacy systems",
+        "Maintenance prediction",
+        "Re-Engineering",
+        "Refactoring"
+      ]
+    },
+    {
+      title: "UNIT IV",
+      topics: [
+        "Verification and Validation",
+        "Development testing (unit, component, system testing)",
+        "Test Driven Development (TDD)",
+        "Release Testing (requirement based, scenario, performance testing)",
+        "User Testing (alpha, beta, acceptance)",
+        "Regression Testing",
+        "Stress Testing",
+        "Reliability Engineering",
+        "Safety Engineering",
+        "Security Engineering",
+        "Safety and Security requirements and measurements"
+      ]
+    }
+  ],
+
+
+};
+
+      const storageKey = "studyProgress";
+
+      function loadProgress() {
+        return JSON.parse(localStorage.getItem(storageKey)) || {};
+      }
+
+      function saveProgress(progress) {
+        localStorage.setItem(storageKey, JSON.stringify(progress));
+      }
+
+      const progress = loadProgress();
+      const container = document.getElementById("subjects");
+
+      Object.entries(data).forEach(([subject, units]) => {
+        const subjectDiv = document.createElement("div");
+        subjectDiv.className = "subject";
+
+        const title = document.createElement("h2");
+        title.textContent = subject;
+        title.onclick = (e) => {
+          if (e.target === title) {
+            const unitsDiv = title.nextElementSibling;
+            const isHidden = unitsDiv.style.display === "none";
+            unitsDiv.style.display = isHidden ? "block" : "none";
+            subjectDiv.classList.toggle("active", isHidden);
+          }
+        };
+        subjectDiv.appendChild(title);
+
+        const unitsDiv = document.createElement("div");
+        unitsDiv.className = "units";
+        unitsDiv.style.display = "none";
+        subjectDiv.appendChild(unitsDiv);
+
+        units.forEach((unit, unitIndex) => {
+          const unitDiv = document.createElement("div");
+          unitDiv.className = "unit";
+
+          const unitTitle = document.createElement("h3");
+          unitTitle.textContent = unit.title;
+          
+          // Add progress bar
+          const progressContainer = document.createElement("div");
+          progressContainer.className = "progress-container";
+          const progressBar = document.createElement("div");
+          progressBar.className = "progress-bar";
+          progressContainer.appendChild(progressBar);
+          unitTitle.appendChild(progressContainer);
+          
+          unitTitle.onclick = (e) => {
+            if (e.target === unitTitle || e.target === progressContainer || e.target === progressBar) {
+              const topicsDiv = unitTitle.nextElementSibling;
+              const isHidden = topicsDiv.style.display === "none";
+              topicsDiv.style.display = isHidden ? "block" : "none";
+              unitDiv.classList.toggle("active", isHidden);
+            }
+          };
+          unitDiv.appendChild(unitTitle);
+
+          const topicsDiv = document.createElement("div");
+          topicsDiv.className = "topics";
+          topicsDiv.style.display = "none";
+
+          // Master checkbox
+          const masterCheckbox = document.createElement("label");
+          masterCheckbox.className = "master-checkbox";
+          const masterInput = document.createElement("input");
+          masterInput.type = "checkbox";
+          
+          // Calculate initial progress
+          const totalTopics = unit.topics.length;
+          let completedTopics = 0;
+          
+          unit.topics.forEach((_, topicIndex) => {
+            if (progress?.[subject]?.[`${unitIndex}-${topicIndex}`]) {
+              completedTopics++;
+            }
+          });
+          
+          masterInput.checked = completedTopics === totalTopics;
+          progressBar.style.width = `${(completedTopics / totalTopics) * 100}%`;
+          
+          masterInput.onchange = () => {
+            unit.topics.forEach((_, topicIndex) => {
+              progress[subject] = progress[subject] || {};
+              progress[subject][`${unitIndex}-${topicIndex}`] = masterInput.checked;
+              document.getElementById(`${subject}-${unitIndex}-${topicIndex}`).checked = masterInput.checked;
+            });
+            saveProgress(progress);
+            progressBar.style.width = masterInput.checked ? "100%" : "0%";
+          };
+          
+          masterCheckbox.appendChild(masterInput);
+          masterCheckbox.appendChild(document.createTextNode("Mark entire unit complete"));
+          topicsDiv.appendChild(masterCheckbox);
+
+          unit.topics.forEach((topic, topicIndex) => {
+            const label = document.createElement("label");
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.id = `${subject}-${unitIndex}-${topicIndex}`;
+            checkbox.checked = progress?.[subject]?.[`${unitIndex}-${topicIndex}`] || false;
+            
+            checkbox.onchange = () => {
+              progress[subject] = progress[subject] || {};
+              progress[subject][`${unitIndex}-${topicIndex}`] = checkbox.checked;
+              saveProgress(progress);
+              
+              // Update master checkbox and progress bar
+              const currentCompleted = unit.topics.reduce((count, _, i) => {
+                return count + (progress?.[subject]?.[`${unitIndex}-${i}`] ? 1 : 0);
+              }, 0);
+              
+              masterInput.checked = currentCompleted === unit.topics.length;
+              progressBar.style.width = `${(currentCompleted / unit.topics.length) * 100}%`;
+            };
+            
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(topic));
+            topicsDiv.appendChild(label);
+          });
+
+          unitDiv.appendChild(topicsDiv);
+          unitsDiv.appendChild(unitDiv);
+        });
+
+        container.appendChild(subjectDiv);
+      });
+
+      // Hide loading spinner when everything is ready
+      setTimeout(() => {
+        document.getElementById('loading').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('loading').style.display = 'none';
+        }, 300);
+      }, 500);
+    });
+  </script>
+</body>
+</html>

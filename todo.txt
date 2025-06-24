@@ -1,0 +1,6 @@
+forgot password
+remove google signup for brand
+remove tokens from in memory
+implement refresh tokens
+be able to send new verify tokens
+send categories, so it doesnt query database for it

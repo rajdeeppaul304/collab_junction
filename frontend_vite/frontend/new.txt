@@ -1,0 +1,303 @@
+write a very detailed, but not too big prompt for another llm that i am using known as v0
+
+tell it that i have installed, axios, react, reactrouterdom, with vite, and javascript only
+
+
+and i have created the singin, signup, basically the auth is completed, and now it should just create the pages, of the images that i gave him, also create a few more pages, in the style of these pages. 
+
+those pages are, 
+home page(accesible by all)
+about page (accesible by all)
+signin (already made but design is not made)
+signup (already made but design is not made)
+creator dashboard, 
+brand dashboard, 
+store page(accebile only by creator,brand can access too but cant buy, i mean normal user can access but cant buy things)
+products page(accebile only by creator, brand can access too but cant buy, i mean normal user can access but cant buy things)
+profile page(accebile only by creator)
+a page to add products (only for brand)
+page to manage products (only for brand)
+
+
+after all  that tell him to give me the routes that he is going to call for get and post apis. and what he expects in return, so that i can code them in flask
+
+//app.jsx
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Signup from "./auth/Signup";
+import Signin from "./auth/Signin";
+import Verify from "./Verify";
+import CreatorDashboard from "./dashboard/CreatorDashboard";
+import BrandDashboard from "./dashboard/BrandDashboard";
+import SetRole from "./auth/SetRole";  // Import the SetRole component
+import ProtectedRoute from "./ProtectedRoute";
+
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/signin" element={<Signin />} />
+        <Route path="/verify/:token" element={<Verify />} />
+        
+        {/* Add the /set-role route */}
+        <Route path="/set-role" element={<SetRole />} />
+
+        {/* Protected routes for dashboards */}
+        <Route path="/dashboard/creator" element={
+          <ProtectedRoute role="CREATOR">
+            <CreatorDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/brand" element={
+          <ProtectedRoute role="BRAND">
+            <BrandDashboard />
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </Router>
+  );
+}
+
+
+
+
+//verify.js
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";  // Import useParams
+import API from "./api";
+
+export default function Verify() {
+  const { token } = useParams();  // Extract the token from the URL
+  const [message, setMessage] = useState("Verifying...");
+
+  useEffect(() => {
+    console.log("Token from URL:", token);  // Debugging line to check token value
+
+    if (token) {
+      API.get(`/verify/${token}`)
+        .then((res) => setMessage(res.data.msg))
+        .catch((err) => setMessage(err.response?.data?.msg || "Verification failed"));
+    } else {
+      setMessage("No token provided");
+    }
+  }, [token]);
+
+  return <h2>{message}</h2>;
+}
+
+
+//api.jsx
+import axios from 'axios';
+
+const API = axios.create({
+  baseURL: 'http://localhost:5000/api',
+});
+
+API.interceptors.request.use((req) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    req.headers.Authorization = `Bearer ${token}`;
+  }
+  return req;
+});
+
+export default API;
+
+
+//auth/singin.jsx
+import { useState } from "react";
+import API from "../api";
+import { useNavigate } from "react-router-dom";
+import { jwtDecode } from 'jwt-decode';
+
+export default function Signin() {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
+
+  const submit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await API.post("/signin", form);
+      console.log("Response:", res); // Log the response to inspect its contents
+      const token = res.data.token;
+      localStorage.setItem("token", token);
+
+      // Decode the token to check its payload
+      const decodedToken = jwtDecode(token);
+      console.log("Decoded Token:", decodedToken); // Inspect the full decoded token
+
+      // Access the role from the 'sub' object
+      const { role } = decodedToken.sub; 
+      console.log("role:", role); // Check if the role is now accessible
+
+      if (role === "CREATOR") navigate("/dashboard/creator");
+      else if (role === "BRAND") navigate("/dashboard/brand");
+    } catch (err) {
+      console.error("Error during signin:", err); // Log the error for inspection
+      alert(err.response?.data?.msg || "Signin failed");
+    }
+  };
+
+  return (
+    <div>
+      <form onSubmit={submit}>
+        <h2>Signin</h2>
+        <input 
+          type="email" 
+          placeholder="Email" 
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })} 
+          required 
+        />
+        <input 
+          type="password" 
+          placeholder="Password" 
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })} 
+          required 
+        />
+        <button type="submit">Signin</button>
+      </form>
+    </div>
+  );
+}
+
+
+//auth/signup.jsx
+import { useState } from "react";
+import API from "../api";
+import { useNavigate } from "react-router-dom";
+
+export default function Signup() {
+  const [form, setForm] = useState({ email: "", password: "", user_role: "CREATOR" });
+  const navigate = useNavigate();
+
+  const submit = async (e) => {
+    e.preventDefault();
+    try {
+      await API.post("/signup", form);
+      alert("Verification email sent!");
+      navigate("/signin");
+    } catch (err) {
+      alert(err.response?.data?.msg || "Signup failed");
+    }
+  };
+
+  const handleGithubSignup = async () => {
+    try {
+      // Send the selected user role to the backend
+      // const response = await API.post("/set_temp_role", { user_role: form.user_role });
+
+      // Redirect the user to GitHub for authentication
+      window.location.href = "http://localhost:5000/api/login/github"; // Adjust URL based on your server setup
+    } catch (err) {
+      alert(err.response?.data?.msg || "Error during role setting");
+    }
+  };
+
+  return (
+    <div>
+      <form onSubmit={submit}>
+        <h2>Signup</h2>
+        <input
+          type="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          required
+        />
+        <select
+          value={form.user_role}
+          onChange={(e) => setForm({ ...form, user_role: e.target.value })}
+        >
+          <option value="CREATOR">Creator</option>
+          <option value="BRAND">Brand</option>
+        </select>
+        <button type="submit">Signup</button>
+      </form>
+
+      {/* GitHub OAuth Signup Button */}
+      <button onClick={handleGithubSignup}>Sign up with GitHub</button>
+    </div>
+  );
+}
+
+
+//setrole.jsx
+import { useState, useEffect } from "react";
+import API from "../api";
+import { useNavigate } from "react-router-dom";
+import { jwtDecode } from 'jwt-decode';
+
+export default function SetRole() {
+  const [role, setRole] = useState("CREATOR");
+  const [githubId, setGithubId] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Extract the github_id from URL params or redirect if not found
+    const urlParams = new URLSearchParams(window.location.search);
+    const githubId = urlParams.get("github_id");
+
+    if (!githubId) {
+      navigate("/signin"); // If no github_id found, redirect to sign-in page
+    } else {
+      setGithubId(githubId);
+    }
+  }, [navigate]);
+const handleRoleSelection = async () => {
+  if (!githubId) {
+    alert("GitHub ID is missing.");
+    return;
+  }
+
+  try {
+    const response = await API.post("/set_role", {
+      github_id: githubId,
+      user_role: role,
+    });
+
+    alert(response.data.msg);
+
+    const token = response.data.token;
+    localStorage.setItem("token", token);
+
+    // Optional: decode the token to decide where to go
+    const decoded = jwtDecode(token);
+    const userRole = decoded.sub?.role;
+
+    if (userRole === "CREATOR") {
+      navigate("/dashboard/creator");
+    } else if (userRole === "BRAND") {
+      navigate("/dashboard/brand");
+    } else {
+      navigate("/dashboard"); // fallback
+    }
+  } catch (err) {
+    console.error("Error setting role:", err);
+    alert(err.response?.data?.msg || "Error setting role.");
+  }
+};
+
+
+  return (
+    <div>
+      <h2>Select Your Role</h2>
+      <select
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+      >
+        <option value="CREATOR">Creator</option>
+        <option value="BRAND">Brand</option>
+      </select>
+      <button onClick={handleRoleSelection}>Confirm Role</button>
+    </div>
+  );
+}
