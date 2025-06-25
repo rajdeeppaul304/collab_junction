@@ -4,35 +4,23 @@ import Card from "../components/ui/Card"
 const About = () => {
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8 bg-[#171717]">
         {/* Hero Section */}
-        <section className="relative rounded-lg overflow-hidden mb-12 bg-gradient-to-r from-gray-900 to-black">
-          <div className="p-8 md:p-12">
-            <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">
-                About <span className="text-yellow-400">Collab Junction</span>: AI-
-                <br />
-                Powered Authentic <span className="text-yellow-400">Branding</span>
-              </h1>
-              <p className="text-gray-300 mb-4 max-w-3xl mx-auto">
-                We're revolutionizing how brands connect with audiences. Collab Junction leverages AI to match brands
-                with relevant micro-influencers, automating collaborations to generate authentic social proof and
-                massive reach at scale.
-              </p>
-              <p className="text-gray-300 max-w-3xl mx-auto">
-                Our mission is to move beyond traditional advertising by fostering genuine partnerships that result in
-                content people trust, driving real brand growth and enabling creators to thrive by sharing products they
-                love.
-              </p>
-            </div>
-          </div>
+        <section className="relative rounded-lg overflow-hidden -mt-2 sm:-mt-[10px] mx-2 sm:mx-[25px] mb-8 sm:mb-[40px]">
+          <img
+            src="/Section 1.png"
+            alt="Collab Junction Hero"
+            className="w-full h-48 sm:h-64 md:h-80 lg:h-96 xl:h-[500px] 2xl:h-[792px] object-cover object-center rounded-lg"
+          />
         </section>
 
         {/* Vision Section */}
-        <section className="mb-12">
-          <div className="border border-yellow-400 rounded-3xl p-8 md:p-12">
-            <h2 className="text-3xl font-bold mb-6 text-center text-yellow-400">Our Vision</h2>
-            <p className="text-center max-w-3xl mx-auto">
+        <section className="mb-12 sm:mb-20">
+          <div className="border border-yellow-300 bg-black rounded-3xl sm:rounded-[50px] min-h-[200px] sm:h-auto p-6 sm:p-8 w-full max-w-[1450px] mx-auto text-center">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-yellow-300">
+              Our Vision
+            </h2>
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl leading-relaxed sm:leading-snug max-w-7xl mx-auto px-2 sm:px-6 text-white">
               We believe the future of marketing lies in genuine connection and trust. By leveraging AI to facilitate
               authentic collaborations at scale, Collab Junction aims to create a thriving ecosystem where both brands
               and creators achieve meaningful growth.
@@ -41,9 +29,11 @@ const About = () => {
         </section>
 
         {/* AI Benefits Section */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold mb-8 text-center">The power of AI on branding</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <section className="mb-12 sm:mb-20">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-8 sm:mb-12 text-center text-white">
+            The Power of AI on Branding
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {[
               {
                 icon: "💡",
@@ -69,82 +59,15 @@ const About = () => {
                 description:
                   "Track campaign performance with detailed analytics on engagement, reach, and conversion metrics to optimize your influencer strategy.",
               },
-            ].map((benefit, index) => (
-              <Card key={index} className="p-6">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mb-4">
-                    <span className="text-yellow-400 text-2xl">{benefit.icon}</span>
+            ].map((item, i) => (
+              <Card key={i} border>
+                <div className="flex flex-col items-center text-center p-4 sm:p-6">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-800 flex items-center justify-center mb-3 sm:mb-4">
+                    <span className="text-yellow-400 text-xl sm:text-2xl">{item.icon}</span>
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{benefit.title}</h3>
-                  <p className="text-gray-400 text-sm">{benefit.description}</p>
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-white">{item.title}</h3>
+                  <p className="text-white text-xs sm:text-sm leading-relaxed">{item.description}</p>
                 </div>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Team Section */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold mb-8 text-center">Our Team</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Alex Johnson",
-                role: "Founder & CEO",
-                bio: "Former marketing executive with 10+ years experience in influencer marketing and brand partnerships.",
-              },
-              {
-                name: "Sarah Chen",
-                role: "CTO",
-                bio: "AI specialist with background in machine learning and recommendation systems from Google.",
-              },
-              {
-                name: "Miguel Rodriguez",
-                role: "Head of Creator Relations",
-                bio: "Former content creator with 1M+ followers, now helping creators navigate brand partnerships.",
-              },
-            ].map((member, index) => (
-              <Card key={index} className="p-6">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-24 h-24 rounded-full bg-gray-800 mb-4"></div>
-                  <h3 className="text-xl font-bold">{member.name}</h3>
-                  <p className="text-yellow-400 mb-2">{member.role}</p>
-                  <p className="text-gray-400 text-sm">{member.bio}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* FAQ Section */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {[
-              {
-                question: "How does the AI matching work?",
-                answer:
-                  "Our proprietary algorithm analyzes creator content, audience demographics, engagement patterns, and brand requirements to suggest optimal partnerships.",
-              },
-              {
-                question: "What types of creators can join?",
-                answer:
-                  "We welcome creators of all sizes, from micro-influencers (1K+ followers) to major content creators across various platforms and niches.",
-              },
-              {
-                question: "How do brands benefit from Collab Junction?",
-                answer:
-                  "Brands gain access to authentic creator partnerships, targeted audience reach, streamlined collaboration workflows, and detailed performance analytics.",
-              },
-              {
-                question: "Is there a fee to join?",
-                answer:
-                  "Creators can join for free. Brands have flexible subscription options based on collaboration volume and feature requirements.",
-              },
-            ].map((faq, index) => (
-              <Card key={index} className="p-6">
-                <h3 className="text-xl font-bold mb-3">{faq.question}</h3>
-                <p className="text-gray-400">{faq.answer}</p>
               </Card>
             ))}
           </div>
