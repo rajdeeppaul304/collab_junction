@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from utils.email import send_verification_email
+from werkzeug.utils import secure_filename
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-import uuid
+import uuid, json, os
 from models import db, User, Product, CreatorInterest, Offer, OfferStatus, CreatorProfile
 
 from flask import Blueprint, request, jsonify, make_response
@@ -158,6 +159,7 @@ def get_creator_offers():
 @creator.route("/profile", methods=["GET"])
 @jwt_required()
 def get_creator_profile():
+    
     current_user_id = get_jwt_identity().get("id")
     
     profile = CreatorProfile.query.filter_by(user_id=current_user_id).first()
@@ -167,6 +169,8 @@ def get_creator_profile():
     return jsonify({
         "id": current_user_id,
         "name": profile.display_name,
+        "short_bio": profile.short_bio,
+
         "bio": profile.bio,
         "languages": [],  # Add to CreatorProfile if needed
         "social": {
@@ -176,40 +180,106 @@ def get_creator_profile():
             "twitter": profile.twitter,
             "website": profile.portfolio_url
         },
-        "phone": "add phone number"  # Add to CreatorProfile if needed
+        "phone": "add phone number",  # Add to CreatorProfile if needed
+        "avatar": profile.avatar_url
     })
+
+
+
 
 
 @creator.route("/profile", methods=["PUT"])
 @jwt_required()
 def update_creator_profile():
     current_user_id = get_jwt_identity().get("id")
-    data = request.get_json()
-
+    
     profile = CreatorProfile.query.filter_by(user_id=current_user_id).first()
     if not profile:
         return jsonify({"error": "Profile not found"}), 404
 
-    # Update profile fields
-    profile.display_name = data.get("name", profile.display_name)
-    profile.bio = data.get("bio", profile.bio)
-    
-    if "social" in data:
-        social = data["social"]
-        profile.instagram = social.get("instagram", profile.instagram)
-        profile.youtube = social.get("youtube", profile.youtube)
-        profile.tiktok = social.get("tiktok", profile.tiktok)
-        profile.twitter = social.get("twitter", profile.twitter)
-        profile.portfolio_url = social.get("website", profile.portfolio_url)
+    # Determine data and files depending on content type
+    if request.content_type and 'multipart/form-data' in request.content_type:
+        data = request.form.to_dict()
+        files = request.files
 
+        # Parse JSON fields if sent as stringified JSON
+        if 'social' in data:
+            try:
+                data['social'] = json.loads(data['social'])
+            except (json.JSONDecodeError, TypeError):
+                data['social'] = {}
+
+        if 'languages' in data:
+            try:
+                data['languages'] = json.loads(data['languages'])
+            except (json.JSONDecodeError, TypeError):
+                data['languages'] = ""
+    else:
+        data = request.get_json() or {}
+        files = {}
+
+    # Handle avatar image removal
+    if data.get("image_deleted") == "true":
+        if profile.avatar_url:
+            old_file_path = profile.avatar_url.replace("/static/", "static/")
+            if os.path.exists(old_file_path):
+                try:
+                    os.remove(old_file_path)
+                except OSError:
+                    pass
+        profile.avatar_url = None
+
+    # Handle avatar image upload
+    image = files.get("image")
+    if image and image.filename:
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+        if '.' in image.filename and image.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
+            filename = f"{uuid.uuid4().hex}_{secure_filename(image.filename)}"
+            upload_dir = "static/avatars"
+            os.makedirs(upload_dir, exist_ok=True)
+            path = os.path.join(upload_dir, filename)
+            image.save(path)
+            profile.avatar_url = f"/static/avatars/{filename}"
+        else:
+            return jsonify({"error": "Invalid file type. Only PNG, JPG, JPEG, and GIF are allowed."}), 400
+
+    # Update text fields
+    if 'name' in data:
+        profile.display_name = data['name']
+    if 'bio' in data:
+        profile.bio = data['bio']
+    if 'short_bio' in data:
+        profile.short_bio = data['short_bio']
+    if 'phone' in data:
+        profile.phone = data['phone']
+    if 'languages' in data:
+        profile.languages_spoken = (
+            ", ".join(data['languages']) if isinstance(data['languages'], list) else data['languages']
+        )
+
+    # Update social media links
+    social = data.get("social", {})
+    if isinstance(social, dict):
+        profile.instagram = social.get('instagram')
+        profile.youtube = social.get('youtube')
+        profile.tiktok = social.get('tiktok')
+        profile.twitter = social.get('twitter')
+        profile.portfolio_url = social.get('website')
+
+    # Commit changes
     db.session.commit()
 
+    # Return updated profile
     return jsonify({
         "message": "Profile updated successfully",
         "profile": {
             "id": current_user_id,
             "name": profile.display_name,
+            "short_bio": profile.short_bio,
             "bio": profile.bio,
+            "phone": getattr(profile, "phone", None),
+            "languages": profile.languages_spoken,
+            "avatar_url": profile.avatar_url,
             "social": {
                 "instagram": profile.instagram,
                 "youtube": profile.youtube,

@@ -172,9 +172,12 @@ class CreatorProfile(db.Model):
     
     # Creator-specific information
     display_name = db.Column(db.String(120), nullable=False)
+    avatar_url = db.Column(db.String(255), nullable=True)  # URL/path to profile image
+    short_bio = db.Column(db.String(255), nullable=True)   # Brief summary
     bio = db.Column(db.Text, nullable=True)
     location = db.Column(db.String(100), nullable=True)
     date_of_birth = db.Column(db.Date, nullable=True)
+    languages_spoken = db.Column(db.String(255), nullable=True)  # e.g., "English, Spanish"
     
     # Professional details
     niche = db.Column(db.String(100), nullable=True)  # e.g., fashion, tech, food

@@ -4,3 +4,4 @@ remove tokens from in memory
 implement refresh tokens
 be able to send new verify tokens
 send categories, so it doesnt query database for it
+when user is created, give a default image
