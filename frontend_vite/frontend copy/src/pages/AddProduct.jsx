@@ -15,7 +15,7 @@ const AddProduct = () => {
     category: "",
     description: "",
     price: "",
-    sizes: [],
+    options: [], // Changed from sizes to options
     images: [],
   })
   const [errors, setErrors] = useState({})
@@ -34,8 +34,6 @@ const AddProduct = () => {
     "Other",
   ]
 
-  const sizes = ["XS", "S", "M", "L", "XL", "XXL"]
-
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -52,15 +50,84 @@ const AddProduct = () => {
     }
   }
 
-  const handleSizeToggle = (size) => {
-    setFormData((prev) => {
-      const newSizes = prev.sizes.includes(size) ? prev.sizes.filter((s) => s !== size) : [...prev.sizes, size]
-
-      return {
+  // Add a new option
+  const addOption = () => {
+    if (formData.options.length < 5) {
+      setFormData((prev) => ({
         ...prev,
-        sizes: newSizes,
-      }
-    })
+        options: [
+          ...prev.options,
+          {
+            id: Date.now(), // Simple ID generation
+            name: "",
+            values: [],
+            currentValue: "", // For input field
+          },
+        ],
+      }))
+    }
+  }
+
+  // Remove an option
+  const removeOption = (optionId) => {
+    setFormData((prev) => ({
+      ...prev,
+      options: prev.options.filter((option) => option.id !== optionId),
+    }))
+  }
+
+  // Update option name
+  const updateOptionName = (optionId, name) => {
+    setFormData((prev) => ({
+      ...prev,
+      options: prev.options.map((option) =>
+        option.id === optionId ? { ...option, name } : option
+      ),
+    }))
+  }
+
+  // Update current value input for an option
+  const updateOptionCurrentValue = (optionId, currentValue) => {
+    setFormData((prev) => ({
+      ...prev,
+      options: prev.options.map((option) =>
+        option.id === optionId ? { ...option, currentValue } : option
+      ),
+    }))
+  }
+
+  // Add value to an option
+  const addValueToOption = (optionId) => {
+    setFormData((prev) => ({
+      ...prev,
+      options: prev.options.map((option) => {
+        if (option.id === optionId && option.currentValue.trim()) {
+          const newValues = [...option.values, option.currentValue.trim()]
+          return { ...option, values: newValues, currentValue: "" }
+        }
+        return option
+      }),
+    }))
+  }
+
+  // Remove value from an option
+  const removeValueFromOption = (optionId, valueIndex) => {
+    setFormData((prev) => ({
+      ...prev,
+      options: prev.options.map((option) =>
+        option.id === optionId
+          ? { ...option, values: option.values.filter((_, i) => i !== valueIndex) }
+          : option
+      ),
+    }))
+  }
+
+  // Handle key press for adding values
+  const handleValueKeyPress = (e, optionId) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      addValueToOption(optionId)
+    }
   }
 
   const handleImageUpload = (e) => {
@@ -111,8 +178,18 @@ const AddProduct = () => {
       newErrors.price = "Price must be a valid number"
     }
 
-    if (formData.sizes.length === 0) {
-      newErrors.sizes = "At least one size must be selected"
+    // Validate options
+    if (formData.options.length === 0) {
+      newErrors.options = "At least one option must be added"
+    } else {
+      formData.options.forEach((option, index) => {
+        if (!option.name.trim()) {
+          newErrors[`option_name_${index}`] = "Option name is required"
+        }
+        if (option.values.length === 0) {
+          newErrors[`option_values_${index}`] = "At least one value must be added"
+        }
+      })
     }
 
     if (formData.images.length === 0) {
@@ -137,9 +214,13 @@ const AddProduct = () => {
       productData.append("category", formData.category)
       productData.append("description", formData.description)
       productData.append("price", formData.price)
-      formData.sizes.forEach((size) => {
-        productData.append("sizes[]", size)
-      })
+      
+      // Append options as JSON string
+      productData.append("options", JSON.stringify(formData.options.map(option => ({
+        name: option.name,
+        values: option.values
+      }))))
+      
       formData.images.forEach((image) => {
         productData.append("images", image)
       })
@@ -234,24 +315,105 @@ const AddProduct = () => {
               </div>
 
               <div>
+                {/* Product Options Section */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1 text-gray-300">Available Sizes</label>
-                  <div className="flex flex-wrap gap-2">
-                    {sizes.map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        className={`
-                          px-4 py-2 rounded-md
-                          ${formData.sizes.includes(size) ? "bg-yellow-400 text-black" : "bg-gray-800 text-white"}
-                        `}
-                        onClick={() => handleSizeToggle(size)}
-                      >
-                        {size}
-                      </button>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-300">
+                      Product Options (Size, Color, etc.)
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addOption}
+                      disabled={formData.options.length >= 5}
+                      className="text-xs"
+                    >
+                      + Add Option
+                    </Button>
+                  </div>
+                  
+                  {errors.options && <p className="mt-1 text-sm text-red-500">{errors.options}</p>}
+                  
+                  <div className="space-y-4">
+                    {formData.options.map((option, index) => (
+                      <div key={option.id} className="border border-gray-700 rounded-md p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <input
+                            type="text"
+                            placeholder="Option name (e.g., Size, Color)"
+                            value={option.name}
+                            onChange={(e) => updateOptionName(option.id, e.target.value)}
+                            className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white mr-2"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeOption(option.id)}
+                            className="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                          >
+                            ×
+                          </button>
+                        </div>
+                        
+                        {errors[`option_name_${index}`] && (
+                          <p className="text-sm text-red-500 mb-2">{errors[`option_name_${index}`]}</p>
+                        )}
+                        
+                        <div className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            placeholder="Add value (e.g., S, M, L or Red, Blue)"
+                            value={option.currentValue}
+                            onChange={(e) => updateOptionCurrentValue(option.id, e.target.value)}
+                            onKeyPress={(e) => handleValueKeyPress(e, option.id)}
+                            className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => addValueToOption(option.id)}
+                            disabled={!option.currentValue.trim()}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                        
+                        {errors[`option_values_${index}`] && (
+                          <p className="text-sm text-red-500 mb-2">{errors[`option_values_${index}`]}</p>
+                        )}
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {option.values.map((value, valueIndex) => (
+                            <span
+                              key={valueIndex}
+                              className="bg-yellow-400 text-black px-3 py-1 rounded-md flex items-center gap-2"
+                            >
+                              {value}
+                              <button
+                                type="button"
+                                onClick={() => removeValueFromOption(option.id, valueIndex)}
+                                className="bg-black bg-opacity-20 rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
-                  {errors.sizes && <p className="mt-1 text-sm text-red-500">{errors.sizes}</p>}
+                  
+                  {formData.options.length === 0 && (
+                    <p className="text-gray-500 text-sm mt-2">
+                      Click "Add Option" to create product variations like Size, Color, etc.
+                    </p>
+                  )}
+                  
+                  {formData.options.length >= 5 && (
+                    <p className="text-yellow-500 text-sm mt-2">
+                      Maximum 5 options allowed per product.
+                    </p>
+                  )}
                 </div>
 
                 <div className="mb-4">

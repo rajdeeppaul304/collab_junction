@@ -1,9 +1,10 @@
 from flask import Blueprint, request, jsonify
-from models import db, User, Product, ProductImage, ProductSize, CreatorInterest, Offer, CreatorProfile
+from models import db, User, Product, ProductImage, ProductSize, CreatorInterest, Offer, CreatorProfile, BrandProfile
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
+import uuid
 
 brand = Blueprint('brand', __name__)
 
@@ -25,6 +26,106 @@ def get_products():
 
 
 
+
+'''
+static for now will implement in the future,
+'''
+@brand.route("/products/<int:product_id>/analytics", methods=["GET"])
+@jwt_required()
+def get_product_analytics(product_id):
+    return jsonify({
+        "views": 1234,
+        "interestCount": 78,
+        "conversionRate": 5.3
+    })
+
+
+
+
+
+
+
+
+# brand.py or similar
+@brand.route("/brand-info", methods=["GET"])
+@jwt_required()
+def get_brand_info():
+    user_id = get_jwt_identity()["id"]
+    
+    brand_profile = BrandProfile.query.filter_by(user_id=user_id).first()
+
+    if not brand_profile:
+        return jsonify({"error": "Brand profile not found"}), 404
+
+    return jsonify({
+        "user_id": brand_profile.user_id,
+        "name": brand_profile.brand_name,
+        "slogan": brand_profile.slogan,
+        "locations": brand_profile.locations or [],
+        "sales_per_month": brand_profile.sales_per_month,
+        "product_count": brand_profile.product_count,
+        "bio": brand_profile.description,
+        "image_url": brand_profile.logo_url,
+        "instagram": brand_profile.instagram,
+        "instagram_handle": brand_profile.instagram_handle,
+        "website": brand_profile.website,
+        "email": brand_profile.contact_email,
+        "owner_name": brand_profile.owner_name,
+        "phone": brand_profile.phone_number,
+        "role": "BRAND",
+        "account_status": brand_profile.account_status,
+        "joined_date": brand_profile.joined_date.strftime("%m/%d/%Y")
+    })
+
+@brand.route("/brand-info", methods=["PUT"])
+@jwt_required()
+def update_brand_info():
+    user_id = get_jwt_identity()["id"]
+    brand_profile = BrandProfile.query.filter_by(user_id=user_id).first()
+
+    if not brand_profile:
+        return jsonify({"error": "Brand profile not found"}), 404
+
+    data = request.form
+    files = request.files
+
+    field_mapping = {
+        "name": "brand_name",
+        "slogan": "slogan",
+        "instagram_handle": "instagram_handle",
+        "bio": "description",
+        "website": "website",
+        "email": "contact_email",
+        "owner_name": "owner_name",
+        "phone": "phone_number"
+    }
+
+    for form_field, model_field in field_mapping.items():
+        if form_field in data:
+            setattr(brand_profile, model_field, data[form_field])
+
+    # Handle locations (array)
+    locations = request.form.getlist("locations[]")
+    if locations:
+        brand_profile.locations = locations
+
+    # Handle image upload
+    image = files.get("image")
+    if image:
+        filename = f"{uuid.uuid4().hex}_{secure_filename(image.filename)}"
+        path = os.path.join("static", filename)
+        image.save(path)
+        brand_profile.logo_url = f"/static/{filename}"
+
+    # Handle image removal
+    if data.get("image_deleted") == "true":
+        brand_profile.logo_url = None
+
+    db.session.commit()
+
+    return jsonify({"message": "Brand info updated successfully"})
+
+
 @brand.route("/products", methods=["POST"])
 @jwt_required()
 def add_product():
@@ -35,13 +136,38 @@ def add_product():
     category = request.form.get("category")
     description = request.form.get("description")
     price = request.form.get("price")
-    sizes = request.form.getlist("sizes[]")
+    options_json = request.form.get("options")
     images = request.files.getlist("images")
     
-    print(name, category, description, price)
+    print(f"Name: {name}")
+    print(f"Category: {category}")
+    print(f"Description: {description}")
+    print(f"Price: {price}")
+    print(f"Options JSON: {options_json}")
+    
+    # Parse options JSON
+    options = []
+    if options_json:
+        try:
+            import json
+            options = json.loads(options_json)
+            print(f"Parsed Options: {options}")
+            
+            # Print each option in detail
+            for i, option in enumerate(options):
+                print(f"Option {i+1}:")
+                print(f"  Name: {option.get('name')}")
+                print(f"  Values: {option.get('values')}")
+                
+        except json.JSONDecodeError as e:
+            print(f"Error parsing options JSON: {str(e)}")
+            return jsonify({"message": "Invalid options format"}), 400
 
     if not all([name, category, description, price]):
         return jsonify({"message": "Missing required fields"}), 400
+
+    if not options:
+        return jsonify({"message": "At least one option is required"}), 400
 
     try:
         product = Product(
@@ -49,14 +175,16 @@ def add_product():
             category=category,
             description=description,
             price=float(price),
-            brand_id=current_user_id
+            brand_id=current_user_id,
+            options=options  # Store options directly as JSON
         )
         db.session.add(product)
         db.session.flush()
 
-        # Save sizes
-        for size in sizes:
-            db.session.add(ProductSize(size=size, product_id=product.id))
+        print(f"Product created with ID: {product.id}")
+        print("Options saved to database:")
+        for option in options:
+            print(f"  - {option['name']}: {', '.join(option['values'])}")
 
         # Save images
         image_paths = []
@@ -78,12 +206,14 @@ def add_product():
             "product": {
                 "id": product.id,
                 "name": product.name,
+                "options": options,
                 "images": image_paths
             }
         }), 201
 
     except Exception as e:
         db.session.rollback()
+        print(f"Error creating product: {str(e)}")
         return jsonify({"message": f"Error creating product: {str(e)}"}), 500
 
 
@@ -91,7 +221,7 @@ def add_product():
 @jwt_required()
 def edit_product(product_id):
     current_user_id = get_jwt_identity().get("id")
-
+    
     product = Product.query.filter_by(id=product_id, brand_id=current_user_id).first()
     if not product:
         return jsonify({"message": "Product not found"}), 404
@@ -100,12 +230,40 @@ def edit_product(product_id):
     category = request.form.get("category")
     description = request.form.get("description")
     price = request.form.get("price")
-    sizes = request.form.getlist("sizes[]")
+    options_json = request.form.get("options")  # This will be a JSON string
     images = request.files.getlist("images")
     deleted_images = request.form.getlist("deleted_images[]")
-    print(deleted_images, "deleted images")
+    
+    print(f"Name: {name}")
+    print(f"Category: {category}")
+    print(f"Description: {description}")
+    print(f"Price: {price}")
+    print(f"Options JSON: {options_json}")
+    print(f"Deleted images: {deleted_images}")
+    
     if not all([name, category, description, price]):
         return jsonify({"message": "Missing required fields"}), 400
+
+    # Parse options JSON
+    options = []
+    if options_json:
+        try:
+            import json
+            options = json.loads(options_json)
+            print(f"Parsed Options: {options}")
+            
+            # Print each option in detail
+            for i, option in enumerate(options):
+                print(f"Option {i+1}:")
+                print(f"  Name: {option.get('name')}")
+                print(f"  Values: {option.get('values')}")
+                
+        except json.JSONDecodeError as e:
+            print(f"Error parsing options JSON: {str(e)}")
+            return jsonify({"message": "Invalid options format"}), 400
+
+    if not options:
+        return jsonify({"message": "At least one option is required"}), 400
 
     try:
         # Update basic fields
@@ -113,11 +271,13 @@ def edit_product(product_id):
         product.category = category
         product.description = description
         product.price = float(price)
+        product.options = options  # Store options directly as JSON (JSONEncodedList handles the conversion)
+        product.updated_at = datetime.utcnow()
 
-        # Clear and update sizes
-        ProductSize.query.filter_by(product_id=product.id).delete()
-        for size in sizes:
-            db.session.add(ProductSize(size=size, product_id=product.id))
+        print(f"Product updated with ID: {product.id}")
+        print("Options updated in database:")
+        for option in options:
+            print(f"  - {option['name']}: {', '.join(option['values'])}")
 
         # Delete selected images
         for url in deleted_images:
@@ -127,29 +287,44 @@ def edit_product(product_id):
                 if os.path.exists(file_path):
                     try:
                         os.remove(file_path)
+                        print(f"Deleted file: {file_path}")
                     except Exception as e:
                         print(f"Error deleting file {file_path}: {e}")
                 db.session.delete(image)
+                print(f"Deleted image record: {url}")
 
         # Append new images
+        new_image_paths = []
         for img in images:
             if img.filename == '':
                 continue
+                
             filename = secure_filename(img.filename)
             save_path = os.path.join("static", "uploads", filename)
             img.save(save_path)
             url_path = f"/static/uploads/{filename}"
             db.session.add(ProductImage(image_url=url_path, product_id=product.id))
+            new_image_paths.append(url_path)
+            print(f"Added new image: {url_path}")
 
         db.session.commit()
 
-        return jsonify({"message": "Product updated successfully"}), 200
+        return jsonify({
+            "message": "Product updated successfully",
+            "product": {
+                "id": product.id,
+                "name": product.name,
+                "options": options,
+                "new_images": new_image_paths
+            }
+        }), 200
 
     except Exception as e:
         db.session.rollback()
+        print(f"Error updating product: {str(e)}")
         return jsonify({"message": f"Error updating product: {str(e)}"}), 500
 
-
+        
 @brand.route("/stats", methods=["GET"])
 @jwt_required()
 def brand_stats():
@@ -179,7 +354,6 @@ def brand_stats():
 @brand.route("/products", methods=["GET"])
 @jwt_required()
 def brand_products():
-    print("HEADERS:", dict(request.headers))
 
     current_user_id = get_jwt_identity().get("id")
     limit = int(request.args.get("limit", 10))
@@ -195,7 +369,7 @@ def brand_products():
             "description": product.description,
             "status": product.status,
             "price": product.price,
-            "sizes": [size.size for size in product.sizes],
+            # "sizes": [size.size for size in product.sizes],
             "images": [image.image_url for image in product.images]
         })
     print(result)
@@ -381,16 +555,19 @@ def update_product_status(product_id):
 @brand.route("/products/<int:product_id>", methods=["GET"])
 @jwt_required(optional=True)
 def get_product_detail(product_id):
-    product = Product.query.get(product_id)
+    current_user_id = get_jwt_identity().get("id")
+    product = Product.query.filter_by(id=product_id, brand_id=current_user_id).first()
+    print(product.options)
     if not product:
         return jsonify({"msg": "Product not found"}), 404
-    print(product)
+
+    # print(product)
     return jsonify({
         "id": product.id,
         "name": product.name,
         "category": product.category,
         "description": product.description,
-        "sizes": [size.size for size in product.sizes],
+        "options": product.options or [],  # This will be automatically decoded from JSON
         "price": product.price,
         "status": product.status,
         "images": [image.image_url for image in product.images],

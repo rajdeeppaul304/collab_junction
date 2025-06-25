@@ -479,6 +479,7 @@ def get_product_detail(product_id):
             "image": images[0] if images else "/sample/default.jpg",
             "images": images,
             "status": product.status,
+            "options": product.options or [],  # Include product options
             "created_at": product.created_at.isoformat() if hasattr(product, 'created_at') else None
         }
 
@@ -488,7 +489,7 @@ def get_product_detail(product_id):
         print(f"Error fetching product detail: {e}")
         return jsonify({"error": "Failed to fetch product details"}), 500
 
-
+        
 @creator.route("/products/<int:product_id>/interest", methods=["GET"])
 @jwt_required()
 def check_product_interest(product_id):
@@ -555,24 +556,24 @@ def check_product_interest(product_id):
 #         return jsonify({"error": "Failed to fetch interests"}), 500
 
 
+
 @creator.route("/products/<int:product_id>/interest", methods=["POST"])
 @jwt_required()
 def express_product_interest(product_id):
-    """Express interest in a product"""
     try:
         current_user_id = get_jwt_identity().get("id")
-        
-        # Check if product exists
+        data = request.get_json() or {}
+
+        print("Received interest data:", data)  # Log dynamic data
+
         product = Product.query.filter_by(id=product_id, status="active").first()
         if not product:
             return jsonify({"error": "Product not found"}), 404
 
-        # Check if user is a creator
         user = User.query.get(current_user_id)
         if not user or (user.user_role and user.user_role.name != "CREATOR"):
             return jsonify({"error": "Only creators can express interest"}), 403
 
-        # Check if interest already exists
         existing_interest = CreatorInterest.query.filter_by(
             creator_id=current_user_id,
             product_id=product_id
@@ -581,10 +582,10 @@ def express_product_interest(product_id):
         if existing_interest:
             return jsonify({"message": "Interest already expressed"}), 200
 
-        # Create new interest record
         new_interest = CreatorInterest(
             creator_id=current_user_id,
-            product_id=product_id
+            product_id=product_id,
+            data=data  # store all received fields here
         )
         
         db.session.add(new_interest)
@@ -599,6 +600,7 @@ def express_product_interest(product_id):
         db.session.rollback()
         print(f"Error expressing product interest: {e}")
         return jsonify({"error": "Failed to express interest"}), 500
+
 
 
 @creator.route("/products/<int:product_id>/interest", methods=["DELETE"])

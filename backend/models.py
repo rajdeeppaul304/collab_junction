@@ -60,9 +60,23 @@ class NotRoleOAuth(db.Model):
         self.email = email
         self.username = username
         self.avatar = avatar
+from sqlalchemy.types import TypeDecorator, Text
+import json
 
 
-# models.py (continue from previous code)
+class JSONEncodedList(TypeDecorator):
+    impl = Text
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return '[]'
+        return json.dumps(value)
+
+    def process_result_value(self, value, dialect):
+        if not value:
+            return []
+        return json.loads(value)
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
@@ -76,9 +90,10 @@ class Product(db.Model):
     brand_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     brand = db.relationship("User", backref=db.backref("products", lazy=True))
 
+    # Store options as JSON instead of separate ProductSize table
+    options = db.Column(JSONEncodedList, nullable=True)  # Store product options as JSON
+    
     images = db.relationship("ProductImage", backref="product", cascade="all, delete-orphan")
-    sizes = db.relationship("ProductSize", backref="product", cascade="all, delete-orphan")
-
 
 class ProductImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -98,8 +113,11 @@ class CreatorInterest(db.Model):
     creator_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    data = db.Column(db.JSON, nullable=True)  # <-- store flexible fields here
+
     product = db.relationship("Product", backref=db.backref("interests", lazy=True))
     creator = db.relationship("User", backref=db.backref("interested_products", lazy=True))
+
 
 class OfferStatus(Enum):
     PENDING = "pending"
@@ -119,33 +137,34 @@ class Offer(db.Model):
     product = db.relationship("Product", backref="offers")
 
 
+
+
 class BrandProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True, nullable=False)
-    
-    # Brand-specific information
+
     brand_name = db.Column(db.String(120), nullable=False)
-    website = db.Column(db.String(255), nullable=True)
-    industry = db.Column(db.String(100), nullable=True)
+    slogan = db.Column(db.String(255), nullable=True)
+    locations = db.Column(JSONEncodedList, nullable=True)  # Store as JSON
+    sales_per_month = db.Column(db.String(20), nullable=True)
+    product_count = db.Column(db.Integer, nullable=True)
     description = db.Column(db.Text, nullable=True)
     logo_url = db.Column(db.String(255), nullable=True)
-    
-    # Contact information
+
+    instagram = db.Column(db.String(255), nullable=True)
+    instagram_handle = db.Column(db.String(100), nullable=True)
+    website = db.Column(db.String(255), nullable=True)
     contact_email = db.Column(db.String(120), nullable=True)
+    owner_name = db.Column(db.String(120), nullable=True)
     phone_number = db.Column(db.String(20), nullable=True)
-    address = db.Column(db.String(255), nullable=True)
-    
-    # Social media links
-    instagram = db.Column(db.String(100), nullable=True)
-    twitter = db.Column(db.String(100), nullable=True)
-    facebook = db.Column(db.String(100), nullable=True)
-    linkedin = db.Column(db.String(100), nullable=True)
-    
+
+    account_status = db.Column(db.String(20), default='ACTIVE')
+    joined_date = db.Column(db.DateTime, default=datetime.utcnow)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     user = db.relationship('User', backref=db.backref('brand_profile', uselist=False))
-    
 
 class CreatorProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
