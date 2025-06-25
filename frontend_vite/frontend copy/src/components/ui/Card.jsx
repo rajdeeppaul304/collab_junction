@@ -1,17 +1,27 @@
-const Card = ({ children, className = "", padding = "p-4", rounded = "rounded-lg", border = false }) => {
+const Card = ({
+  children,
+  className = "",
+  padding = "p-6",
+  rounded = "rounded-xl",
+  border = false,
+}) => {
   return (
     <div
       className={`
-        bg-gray-900 
-        ${padding} 
-        ${rounded} 
-        ${border ? "border border-gray-800" : ""}
+        bg-[#2B2B2B]
+        ${padding}
+        ${rounded}
+        ${border
+          ? "border-2 border-black shadow-[0_8px_20px_rgba(0,0,0,0.7)] shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]"
+          : ""
+        }
         ${className}
       `}
     >
       {children}
     </div>
-  )
-}
+  );
+};
 
-export default Card
+export default Card;
+

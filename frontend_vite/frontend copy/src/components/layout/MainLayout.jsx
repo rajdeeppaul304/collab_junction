@@ -13,7 +13,7 @@ const MainLayout = ({ children }) => {
   const isAuthPage = pathname === "/signin" || pathname === "/signup"
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-white">
+    <div className="min-h-screen flex flex-col bg-[#171717] text-white">
       {!isAuthPage && <Navbar />}
       <main className="flex-grow">{children}</main>
       {!isAuthPage && <Footer />}
