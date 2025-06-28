@@ -2,7 +2,7 @@
 
 const Button = ({
   children,
-  variant = "primary",
+  variant = "",
   size = "md",
   fullWidth = false,
   onClick,
@@ -10,7 +10,7 @@ const Button = ({
   disabled = false,
   className = "",
 }) => {
-  const baseClasses = "rounded-md font-medium transition-colors"
+  const baseClasses = "font-medium transition-colors"
 
   const variantClasses = {
     primary: "bg-yellow-400 text-black hover:bg-yellow-500",
@@ -28,6 +28,9 @@ const Button = ({
   const widthClass = fullWidth ? "w-full" : ""
   const disabledClass = disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
 
+  // ✅ fallback border-radius if none provided
+  const borderRadiusFallback = !className.includes("rounded") ? "rounded-md" : ""
+
   return (
     <button
       type={type}
@@ -35,10 +38,11 @@ const Button = ({
       disabled={disabled}
       className={`
         ${baseClasses} 
-        ${variantClasses[variant]} 
-        ${sizeClasses[size]} 
+        ${variantClasses[variant] || ""} 
+        ${sizeClasses[size] || ""} 
         ${widthClass} 
         ${disabledClass}
+        ${borderRadiusFallback}
         ${className}
       `}
     >
@@ -48,3 +52,4 @@ const Button = ({
 }
 
 export default Button
+

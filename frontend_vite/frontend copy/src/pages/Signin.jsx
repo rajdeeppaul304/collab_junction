@@ -25,7 +25,6 @@ const Signin = () => {
       [name]: value,
     }))
 
-    // Clear error when user types
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -61,9 +60,8 @@ const Signin = () => {
     try {
       const userRole = await signin(formData.email, formData.password)
 
-      // Redirect based on role
       if (userRole === "CREATOR") {
-        navigate("/dashboard/creator")
+        navigate("/profile/")
       } else if (userRole === "BRAND") {
         navigate("/dashboard/brand")
       } else {
@@ -79,50 +77,59 @@ const Signin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-gray-900 rounded-lg p-8 shadow-lg">
-          <div className="flex justify-center mb-6">
+        <div className="bg-[#1C1C1C] rounded-2xl p-8 shadow-lg border border-[#2B2B2B]">
+          <div className="flex justify-center mb-8">
             <Logo />
           </div>
 
-          <h1 className="text-2xl font-bold text-center mb-6">Sign In</h1>
+          <h1 className="text-3xl font-extrabold text-white text-center mb-6 tracking-wide">
+            Welcome Back 👋
+          </h1>
 
           {errors.general && (
-            <div className="bg-red-900/30 border border-red-500 text-red-400 px-4 py-2 rounded-md mb-4">
+            <div className="bg-red-900/30 border border-red-500 text-red-400 px-4 py-2 rounded-md mb-4 text-sm">
               {errors.general}
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-5">
             <Input
               label="Email"
               name="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange}
               error={errors.email}
+              className="bg-[#2A2A2A] text-white"
             />
 
             <Input
               label="Password"
               name="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="••••••••"
               value={formData.password}
               onChange={handleChange}
               error={errors.password}
+              className="bg-[#2A2A2A] text-white"
             />
 
-            <Button type="submit" fullWidth disabled={isLoading} className="mt-4">
+            <Button
+              type="submit"
+              fullWidth
+              disabled={isLoading}
+              className="mt-2 bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 rounded-xl transition-all duration-200"
+            >
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-gray-400">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-yellow-400 hover:underline">
+          <div className="mt-6 text-center text-gray-400 text-sm">
+            Don’t have an account?{" "}
+            <Link to="/signup" className="text-yellow-400 hover:underline font-semibold">
               Sign Up
             </Link>
           </div>

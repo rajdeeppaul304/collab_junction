@@ -12,38 +12,39 @@ const Home = () => {
     <MainLayout>
       <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Hero Section */}
-        <section className="relative rounded-lg overflow-hidden mb-8 sm:mb-12 w-full">
-          {/* Outer wrapper */}
-          <div className="relative w-full mx-auto">
-            {/* Background + Overlay */}
-            <div className="relative bg-[url('/1.jpg')] bg-no-repeat bg-top bg-cover h-[700px] flex items-center justify-center px-6 sm:px-8 md:px-12 border-b-4 border-black rounded-3xl shadow-2xl overflow-hidden w-[1460px] mx-auto opacity-80">
+      <section className="relative rounded-3xl overflow-hidden mb-8 sm:mb-12 w-full max-w-[1460px] mx-auto border-b-4 border-black shadow-2xl h-[700px]">
+          
+          {/* Background image with reduced opacity */}
+          <div className="absolute inset-0 z-0">
+            <div className="w-full h-full bg-[url('/1.jpg')] bg-no-repeat bg-top bg-cover opacity-40" />
+            <div className="absolute bottom-0 left-0 w-full h-96 bg-gradient-to-t from-black to-transparent" />
+          </div>
 
-              {/* Bottom shadow overlay */}
-              <div className="absolute bottom-0 left-0 w-full h-96 bg-gradient-to-t from-black to-transparent pointer-events-none z-0" />
+          {/* Foreground content */}
+          <div className="relative z-10 flex items-center justify-center h-full px-6 sm:px-8 md:px-12">
+            <div className="text-center max-w-4xl mt-[-60px]">
+              <h1 className="text-5xl sm:text-6xl mb-6 sm:mb-8 text-white leading-tight">
+                Easy Way to <span className="text-yellow-300">collaborate with</span>
+                <div className="h-3 sm:h-5" />
+                <span className="text-yellow-300">brands</span> and grow as a{" "}
+                <span className="text-yellow-300">creator</span>
+              </h1>
 
-              {/* Content */}
-              <div className="relative z-10 max-w-4xl text-center mt-[10px]">
-                <h1 className="text-5xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 text-white">
-                  Easy Way to <span className="text-yellow-400">collaborate</span> with <br className="hidden sm:block" />
-                  <span className="text-yellow-400">brands</span> and grow as a{" "}
-                  <span className="text-yellow-400">creator</span>
-                </h1>
-                <p className="text-gray-300 mb-8 sm:mb-10 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto">
-                  Connect with brands that align with your values, showcase your talent, and earn through authentic
-                  collaborations.
-                </p>
-                <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                  <Link to="/signup">
-                    <Button variant="outline" className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg">
-                      I'm a Creator
-                    </Button>
-                  </Link>
-                  <Link to="/signup">
-                    <Button className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg">
-                      I'm a Brand
-                    </Button>
-                  </Link>
-                </div>
+              <p className="mt-10 text-white mb-8 sm:mb-10 text-base sm:text-lg max-w-3xl mx-auto">
+                Pizza ipsum dolor meat lovers buffalo. Extra crust lovers wing pesto. Ricotta lasagna fresh and white large mozzarella. Pesto Philly lasagna anchovies bacon NY. Sautéed lot bacon banana green pineapple mushrooms large string meat.
+              </p>
+
+              <div className="flex flex-col sm:flex-row justify-center gap-6 sm:gap-24 mt-[100px]">
+                <Link to="/signup">
+                  <Button className="w-[260px] h-[70px] px-6 py-3 bg-white text-black border border-white rounded-[20px] text-base">
+                    I'm a Creator
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button className="w-[260px] h-[70px] px-6 py-3 bg-yellow-300 text-black border border-white rounded-[20px] text-base">
+                    I'm a Brand
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
@@ -120,7 +121,7 @@ const Home = () => {
           </section>
 
         </div>
-          <section>
+        <section>
           <div>
             <BrandCollaborations />
           </div>
@@ -134,7 +135,7 @@ const Home = () => {
 
 
         <section>
-          
+
           <div>
             <JoinUsSection />
           </div>

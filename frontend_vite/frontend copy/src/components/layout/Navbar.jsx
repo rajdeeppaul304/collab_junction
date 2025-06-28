@@ -19,18 +19,17 @@ const Navbar = () => {
   const getNavItems = () => {
     const items = []
 
-    // Add dashboard link if authenticated
-    if (isAuthenticated && userRole === "CREATOR") {
-      items.push(
-        <Link key="dashboard" to="/dashboard/creator" className="hover:text-yellow-400">
-          Dashboard
-        </Link>,
-      )
-    }
     if (isAuthenticated && userRole === "BRAND") {
       items.push(
         <Link key="dashboard" to="/dashboard/brand" className="hover:text-yellow-400">
           Dashboard
+        </Link>,
+      )
+    }
+      if (isAuthenticated && userRole === "CREATOR") {
+      items.push(
+        <Link key="profile" to="/profile" className="hover:text-yellow-400">
+          Profile
         </Link>,
       )
     }
@@ -44,19 +43,12 @@ const Navbar = () => {
 
     // Add logo
     items.push(
-      <Link key="logo" to="/" className="hover:text-yellow-400">
+      <Link key="logo]" to="/" className="hover:text-yellow-400">
         <Logo />
       </Link>,
     )
 
-    // Add profile link if creator
-    if (isAuthenticated && userRole === "CREATOR") {
-      items.push(
-        <Link key="profile" to="/profile" className="hover:text-yellow-400">
-          Profile
-        </Link>,
-      )
-    }
+  
 
     // Add about link
     items.push(
@@ -72,11 +64,7 @@ const Navbar = () => {
           Sign In
         </Link>,
       )
-      items.push(
-        <Link key="signup" to="/signup" className="bg-yellow-400 text-black px-4 py-2 rounded-md hover:bg-yellow-500">
-          Sign Up
-        </Link>,
-      )
+     
     } else {
       items.push(
         <button key="logout" onClick={handleLogout} className="hover:text-yellow-400">
@@ -91,9 +79,12 @@ const Navbar = () => {
   const navItems = getNavItems()
 
   return (
-    <nav className="bg-black text-white w-full max-w-[1117px]  h-[74px] mt-8 mb-[-5px] px-6 rounded-3xl mx-auto">
-      {/* Desktop view - evenly distributed items */}
-      <div className="hidden md:flex justify-evenly items-center h-[70px] text-2xl font-poppins   ">{navItems}</div>
+    <nav className="bg-black text-white w-full max-w-[1000px] h-[60px] mt-8 mb-[-2px] px-10 rounded-3xl mx-auto">
+  {/* Desktop view - evenly distributed items */}
+  <div className="hidden md:flex justify-evenly items-center h-[70px] text-xl font-poppins gap-10 relative -top-1">
+    {navItems}
+  </div>
+
 
       {/* Mobile view */}
       <div className="md:hidden flex justify-between items-center h-[70px]">

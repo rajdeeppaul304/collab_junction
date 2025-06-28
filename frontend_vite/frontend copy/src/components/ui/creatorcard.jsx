@@ -105,7 +105,7 @@ function CreatorCard({ creator }) {
             <h3 className="text-xl font-bold mb-1">{creator.name}</h3>
             <p className="text-gray-200 text-sm mb-2 opacity-90">{creator.specialty}</p>
             <div className="flex items-center">
-              <span className="text-yellow-400 font-bold text-base">{creator.followers} Followers</span>
+              <span className="text-yellow-300 font-bold text-base">{creator.followers} Followers</span>
             </div>
           </div>
         </div>

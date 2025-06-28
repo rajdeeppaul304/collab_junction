@@ -1,5 +1,5 @@
 "use client"
-import { Users, Building2 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 const creatorFeatures = [
   "Pizza ipsum dolor meat lovers buffalo. White pie pepperoni meat parmesan.",
@@ -15,6 +15,12 @@ const creatorFeatures = [
 const brandFeatures = [...creatorFeatures]
 
 export default function JoinUsSection() {
+  const navigate = useNavigate()
+
+  const handleClick = (role) => {
+    navigate(`/signup?role=${role}`)
+  }
+
   return (
     <div className="w-full min-h-screen bg-[#171717] py-16 px-4 mt-[-50px]">
       <div className="max-w-6xl mx-auto">
@@ -47,10 +53,10 @@ export default function JoinUsSection() {
             <h2 className="text-4xl font-bold text-center mb-6">For Creators</h2>
 
             {/* Features List */}
-            <ul className=" mb-6 text-[11px] font-bold leading-normal px-4">
+            <ul className="mb-6 text-[11px] font-bold leading-normal px-4">
               {creatorFeatures.map((feature, index) => (
                 <li key={index} className="flex items-start">
-                  <span className="text-white  mr-2 ">•</span>
+                  <span className="text-white mr-2">•</span>
                   <span>{feature}</span>
                 </li>
               ))}
@@ -58,7 +64,10 @@ export default function JoinUsSection() {
 
             {/* Button */}
             <div className="flex justify-center">
-              <button className="bg-white text-gray-800 px-6 py-2 rounded-full font-semibold text-2xl hover:bg-gray-100 transition-colors duration-200">
+              <button
+                onClick={() => handleClick("creator")}
+                className="bg-white text-gray-800 px-6 py-2 rounded-full font-semibold text-2xl hover:bg-gray-100 transition-colors duration-200"
+              >
                 I'm a Creator
               </button>
             </div>
@@ -81,10 +90,10 @@ export default function JoinUsSection() {
             <h2 className="text-4xl font-bold text-center mb-6">For Brands</h2>
 
             {/* Features List */}
-            <ul className=" mb-6 text-[11px] font-bold leading-normal px-4">
+            <ul className="mb-6 text-[11px] font-bold leading-normal px-4">
               {brandFeatures.map((feature, index) => (
                 <li key={index} className="flex items-start">
-                  <span className="text-white mr-2 ">•</span>
+                  <span className="text-white mr-2">•</span>
                   <span>{feature}</span>
                 </li>
               ))}
@@ -92,7 +101,10 @@ export default function JoinUsSection() {
 
             {/* Button */}
             <div className="flex justify-center">
-              <button className="bg-[#FFF93D] text-gray-800 px-6 py-2 rounded-full font-semibold text-2xl hover:bg-yellow-500 transition-colors duration-200">
+              <button
+                onClick={() => handleClick("brand")}
+                className="bg-[#FFF93D] text-gray-800 px-6 py-2 rounded-full font-semibold text-2xl hover:bg-yellow-500 transition-colors duration-200"
+              >
                 I'm a Brand
               </button>
             </div>
@@ -102,4 +114,3 @@ export default function JoinUsSection() {
     </div>
   )
 }
-

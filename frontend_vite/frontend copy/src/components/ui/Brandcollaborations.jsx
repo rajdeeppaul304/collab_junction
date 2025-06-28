@@ -12,10 +12,10 @@ const BrandCollaborations = () => {
   return (
     <>
       {/* Title Section */}
-      <section className="bg-white py-8 w-[600px] h-[] center mx-auto rounded-t-3xl">
-        <h2 className="text-white text-3xl font-semibold text-center">
+      <section className="bg-black py-8 w-[600px] h-[70px] center mx-auto rounded-t-3xl">
+        <p className="text-white text-5xl font-semibold text-center mt-[-20px] ">
           Brand Collaborations
-        </h2>
+        </p>
       </section>
 
       {/* Logos Section */}

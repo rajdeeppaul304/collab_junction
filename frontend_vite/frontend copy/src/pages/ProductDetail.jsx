@@ -176,7 +176,7 @@ const areAllOptionsSelected = () => {
           />
         </div>
         <div className="p-3">
-          <h3 className="font-medium text-white">{cardProduct.name}</h3>
+          <h3 className="font-medium text-white\\\">{cardProduct.name}</h3>
           <p className="text-gray-400 text-sm">By {cardProduct.brand}</p>
           <p className="text-yellow-400 my-1">Rs. {cardProduct.price?.toLocaleString()}</p>
           <Button
@@ -225,162 +225,132 @@ const areAllOptionsSelected = () => {
 
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <div className="mb-6">
-          <Link to="/store" className="flex items-center text-gray-400 hover:text-white">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="mr-2"
-            >
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-            Store
-            <span className="mx-2">{'>'}</span>
-            {product.category}
-          </Link>
-        </div>
+  <div className="bg-[#2E2E2E] rounded-lg p-6 w-[1300px] mx-auto mt-10 mb-10">
+    
+    {/* Breadcrumb */}
+ <div className="mb-4">
+  <Link to="/store" className="flex items-center hover:text-white">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="mr-2 text-white"
+    >
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+    <span className="text-white">Store</span>
+    <span className="mx-2 text-gray-400">{'>'}</span>
+    <span className="text-gray-400">{product.category}</span>
+  </Link>
+</div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Product Images */}
-          <div>
-            {/* Main Product Image */}
-            <div className="bg-gray-900 rounded-lg overflow-hidden mb-4 relative flex justify-center items-center">
-              <a
-                href={getImageUrl(selectedImage || product.image)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block max-w-full max-h-[400px]"
+
+    {/* Main Flex Layout */}
+    <div className="flex flex-col md:flex-row gap-20">
+      
+      {/* Product Images - Left */}
+      <div className="relative bg-[#2E2E2E] rounded-lg overflow-hidden max-w-[400px] w-full h-fit ml-[70px] mt-6 ">
+        <a
+          href={getImageUrl(selectedImage || product.image)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full h-full"
+        >
+          <img
+            src={getImageUrl(selectedImage || product.image)}
+            alt={product.name}
+            className="object-cover w-full h-[500px]"
+            onError={(e) => {
+              e.target.src = "/placeholder.svg";
+            }}
+          />
+        </a>
+
+        {/* Thumbnails */}
+        {product.images?.length > 0 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%]  rounded-lg py-2 px-4 flex items-center gap-3 overflow-x-auto no-scrollbar">
+            {product.images.slice(0, 6).map((img, index) => (
+              <div
+                key={index}
+                className={`flex-none h-16 w-16 rounded-md overflow-hidden border cursor-pointer ${selectedImage === img ? "border-yellow-400" : "border-transparent"
+                  }`}
+                onClick={() => setSelectedImage(img)}
               >
                 <img
-                  src={getImageUrl(selectedImage || product.image)}
-                  alt={product.name}
-                  className="object-contain max-h-[400px] w-auto mx-auto"
+                  src={getImageUrl(img)}
+                  alt={`Thumbnail ${index + 1}`}
+                  className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.src = "/placeholder.svg"
+                    e.target.src = "/placeholder.svg";
                   }}
                 />
-              </a>
-            </div>
-
-            {/* Scrollable Thumbnails */}
-            {product.images?.length > 0 && (
-              <div className="relative">
-                {/* Left Arrow */}
-                <button
-                  onClick={() => scrollThumbnails("left")}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-gray-800 hover:bg-gray-700 rounded-full"
-                  aria-label="Scroll left"
-                >
-                  ◀
-                </button>
-
-                {/* Thumbnails container */}
-                <div
-                  ref={thumbnailContainerRef}
-                  className="flex overflow-x-auto no-scrollbar gap-3 px-10"
-                  style={{ scrollBehavior: "smooth", maxWidth: "100%" }}
-                >
-                  {product.images.slice(0, 6).map((img, index) => (
-                    <div
-                      key={index}
-                      className={`flex-none h-24 w-24 cursor-pointer rounded-lg overflow-hidden border ${selectedImage === img ? "border-yellow-400" : "border-transparent"
-                        }`}
-                      onClick={() => setSelectedImage(img)}
-                    >
-                      <img
-                        src={getImageUrl(img)}
-                        alt={`Thumbnail ${index + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = "/placeholder.svg"
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Right Arrow */}
-                <button
-                  onClick={() => scrollThumbnails("right")}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-gray-800 hover:bg-gray-700 rounded-full"
-                  aria-label="Scroll right"
-                >
-                  ▶
-                </button>
               </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Product Details - Right */}
+      <div className="flex-1">
+        <div className="bg-[#2E2E2E] p-6 h-full flex flex-col justify-between rounded-lg">
+          
+          {/* Top Section */}
+          <div className="flex justify-between items-center mb-4 ">
+            <div className="inline-block bg-[#242424] border border-white px-8 py-3 rounded-full text-xl text-white">
+              {product.category}
+            </div>
+            {userRole === "BRAND" && (
+              <Link to={`/products/${product.id}/edit`}>
+                <Button className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-full ">
+                  EDIT
+                </Button>
+              </Link>
             )}
           </div>
 
+          <h1 className="text-5xl font-semibold mt-4 text-white">{product.name}</h1>
+          <p className="text-white mb-6 text-xl ">By {product.brand}</p>
 
+          {/* Price */}
+          <div className="mb-3">
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-gray-400 line-through text-xl mr-2">
+                ₹{product.originalPrice.toLocaleString()}
+              </span>
+            )}
+            <span className="text-white text-4xl font-semibold">
+              ₹{product.price?.toLocaleString()}
+            </span>
+          </div>
 
-          {/* Product Details */}
-          <div>
-            <div className="bg-gray-900 rounded-lg p-6">
-              {/* Category Badge */}
-              {/* Category Row with Button */}
-              <div className="flex justify-between items-center mb-4">
-                <div className="inline-block bg-gray-800 px-4 py-1 rounded-full text-sm">
-                  {product.category}
-                </div>
-                {userRole === "BRAND" && (
-                  <div>
-                    <Link to={`/products/${product.id}/edit`}>
+          {/* Description */}
+          <div className="mb-6">
+            <h3 className="text-xl font-bold mb-2 text-white">Description:</h3>
+            <p className="text-white text-[12px] ">
+              {product.description || "High-quality product perfect for creators and professionals."}
+            </p>
+          </div>
 
-                      <Button
-                        className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-full"
-                        onClick={() => console.log("Button clicked")} // Replace with your actual action
-                      >
-                        EDIT
-                      </Button>
-                    </Link>
-                  </div>
-                )}
+          {/* Specifications */}
+          {product.specifications && (
+            <div className="mb-6">
+              <h3 className="text-xl font-bold mb-2 text-gray-900">Specifications:</h3>
+              <div className="text-gray-700 whitespace-pre-wrap">
+                {typeof product.specifications === 'string'
+                  ? product.specifications
+                  : JSON.stringify(product.specifications, null, 2)}
               </div>
+            </div>
+          )}
+   
 
-              <h1 className="text-3xl font-bold mb-2 text-white">{product.name}</h1>
-              <p className="text-gray-400 mb-4">By {product.brand}</p>
 
-              {/* Price */}
-              <div className="mb-6">
-                {product.originalPrice && product.originalPrice > product.price && (
-                  <span className="text-gray-400 line-through text-xl mr-2">
-                    ₹{product.originalPrice.toLocaleString()}
-                  </span>
-                )}
-                <span className="text-yellow-400 text-3xl font-bold">
-                  ₹{product.price?.toLocaleString()}
-                </span>
-              </div>
-
-              {/* Description */}
-              <div className="mb-6">
-                <h3 className="text-xl font-bold mb-2 text-white">Description:</h3>
-                <p className="text-gray-300">
-                  {product.description || "High-quality product perfect for creators and professionals."}
-                </p>
-              </div>
-
-              {/* Specifications */}
-              {product.specifications && (
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold mb-2 text-white">Specifications:</h3>
-                  <div className="text-gray-300">
-                    {typeof product.specifications === 'string'
-                      ? product.specifications
-                      : JSON.stringify(product.specifications, null, 2)
-                    }
-                  </div>
-                </div>
-              )}
 
               {/* Action Button for Interest */}
               <div className="mt-10 flex space-x-4">
@@ -388,9 +358,9 @@ const areAllOptionsSelected = () => {
                   <>
                     <Button
                       onClick={handleInterest}
-                      className={`flex-1 py-3 text-lg font-semibold rounded-2xl transition-all duration-200 ${isInterested
-                          ? "bg-green-600 hover:bg-green-700 text-white cursor-not-allowed"
-                          : "bg-yellow-400 hover:bg-yellow-700 text-white"
+                      className={`flex-1 py-3 text-lg font-semibold rounded-[30px] transition-all duration-200 ${isInterested
+                          ? "bg-white  text-black cursor-not-allowed"
+                          : "bg-white border border-black text-black hover:bg-gray-200 transition-colors duration-200"
                         }`}
                       disabled={isInterested || loadingInterest}
                     >
@@ -417,7 +387,7 @@ const areAllOptionsSelected = () => {
                             setLoadingInterest(false)
                           }
                         }}
-                        className="flex-1 py-3 text-lg font-semibold rounded-2xl bg-red-600 hover:bg-red-700 text-white"
+                        className="flex-1 py-3 text-lg font-semibold rounded-3xl bg-white border-2 border-black text-black  hover:bg-red-700 text-white"
                         disabled={loadingInterest}
                       >
                         {loadingInterest ? "Processing..." : "Remove Interest"}
@@ -454,7 +424,7 @@ const areAllOptionsSelected = () => {
         </div>
 
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
+        {/* {relatedProducts.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6 text-white">You may also like</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -463,48 +433,48 @@ const areAllOptionsSelected = () => {
               ))}
             </div>
           </div>
-        )}
+        )} */}
+{userRole === "BRAND" && (
+  <div className="mt-12">
+    <h2 className="text-2xl font-bold mb-6 text-white">Product Analytics</h2>
 
-        {userRole === "BRAND" && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6 text-white">Product Analytics</h2>
-
-            {loadingAnalytics ? (
-              <p className="text-gray-400">Loading analytics...</p>
-            ) : errorAnalytics ? (
-              <p className="text-red-400">{errorAnalytics}</p>
-            ) : productAnalytics ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-white">
-                <div className="p-4 bg-gray-800 rounded-lg shadow">
-                  <p className="text-sm text-gray-400">Views</p>
-                  <p className="text-xl font-semibold">{productAnalytics.views}</p>
-                </div>
-                <div className="p-4 bg-gray-800 rounded-lg shadow">
-                  <p className="text-sm text-gray-400">Interest Count</p>
-                  <p className="text-xl font-semibold">{productAnalytics.interestCount}</p>
-                </div>
-                <div className="p-4 bg-gray-800 rounded-lg shadow">
-                  <p className="text-sm text-gray-400">Conversion Rate</p>
-                  <p className="text-xl font-semibold">{productAnalytics.conversionRate}%</p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-gray-400">No analytics data available.</p>
-            )}
-          </div>
-        )}
-
-
+    {loadingAnalytics ? (
+      <p className="text-gray-400">Loading analytics...</p>
+    ) : errorAnalytics ? (
+      <p className="text-red-400">{errorAnalytics}</p>
+    ) : productAnalytics ? (
+      <div className="flex justify-start flex-wrap gap-6">
+        <div className="w-[200px] p-4 bg-[#242424] rounded-lg shadow text-white">
+          <p className="text-sm text-white">Views</p>
+          <p className="text-xl font-semibold">{productAnalytics.views}</p>
+        </div>
+        <div className="w-[200px] p-4 bg-[#242424] rounded-lg shadow text-white">
+          <p className="text-sm text-white">Interest Count</p>
+          <p className="text-xl font-semibold">{productAnalytics.interestCount}</p>
+        </div>
+        <div className="w-[200px] p-4 bg-[#242424] rounded-lg shadow text-white">
+          <p className="text-sm text-white">Conversion Rate</p>
+          <p className="text-xl font-semibold">{productAnalytics.conversionRate}%</p>
+        </div>
       </div>
+    ) : (
+      <p className="text-gray-400">No analytics data available.</p>
+    )}
+  </div>
+)}
+
+
+
+        </div>
 
       {/* interest modal here */}
 
 
 {showInterestModal && (
   <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto text-black">
-    <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl relative overflow-hidden">
+    <div className="bg-[#2B2B2B] w-full max-w-3xl rounded-2xl shadow-2xl relative overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white">
+      <div className="bg-[#2B2B2B] px-6 py-4 text-white">
         <button
           onClick={() => setShowInterestModal(false)}
           className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200"
@@ -515,20 +485,15 @@ const areAllOptionsSelected = () => {
         </button>
         
         <h2 className="text-2xl font-bold">
-          {interestStep === 1 ? "Customize Your Product" : "Final Details"}
+          {interestStep === 1 ? "Customize Your Product" : ""}
         </h2>
         <p className="text-white/90 mt-1">
-          {interestStep === 1 ? "Select your preferred options" : "Complete your interest form"}
+          {interestStep === 1 ? "Select your preferred options" : ""}
         </p>
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-gray-100 h-2">
-        <div 
-          className="bg-gradient-to-r from-blue-500 to-purple-500 h-full transition-all duration-300 ease-out"
-          style={{ width: interestStep === 1 ? "50%" : "100%" }}
-        />
-      </div>
+      
 
       {/* Content */}
       <div className="p-6">
@@ -538,12 +503,12 @@ const areAllOptionsSelected = () => {
             {product?.options && product.options.length > 0 ? (
               <div className="space-y-5">
                 <div className="text-center mb-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Product Options</h3>
-                  <p className="text-gray-600">Select your preferred configuration</p>
+                  <h3 className="text-lg font-semibold text-white mb-4">Product Options</h3>
+                 
                 </div>
 
                 {product.options.map((option, index) => (
-                  <div key={index} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <div key={index} className="bg-[#2B2B2B] rounded-xl p-4 border border-gray-200">
                     <label className="block text-sm font-semibold text-gray-700 mb-3 capitalize">
                       {option.name || `Option ${index + 1}`}
                       <span className="text-red-500 ml-1">*</span>
@@ -620,7 +585,7 @@ const areAllOptionsSelected = () => {
             {/* Next Button */}
             <div className="flex justify-end pt-4">
               <button
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
+                className="bg-[#2B2B2B] text-white px-8 py-3 rounded-lg font-semibold disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed hover:scale-[1.02] hover:shadow-xl transition-all duration-200 shadow-lg"
                 disabled={product?.options?.length > 0 && !areAllOptionsSelected()}
                 onClick={() => setInterestStep(2)}
               >
@@ -633,54 +598,49 @@ const areAllOptionsSelected = () => {
           </div>
         )}
 
-        {interestStep === 2 && (
+       {interestStep === 2 && (
           <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Almost Done!</h3>
-              <p className="text-gray-600">Just need a few more details to complete your interest</p>
-            </div>
+            {/* Header */}
+            <h2 className="text-white text-xl font-semibold mb-6 mt-[-30px]">Contact the Company</h2>
 
             {/* Note to Company */}
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <div>
+              <label className="block  text-sm mb-3 text-white">
                 Send note to company
               </label>
               <textarea
-                className="w-full border border-gray-300 rounded-lg p-3 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full bg-[#4B4B4B] border border-white rounded-lg p-3 text-white placeholder-gray-400 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 rows="4"
-                placeholder="Write your message..."
+                placeholder="Enter the purpose of obtaining this product..."
                 value={step2Data.note}
                 onChange={(e) => setStep2Data({ ...step2Data, note: e.target.value })}
               />
             </div>
 
             {/* Current Address */}
-            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Enter your current address
+            <div>
+              <label className="block text-white text-sm mb-3">
+                Enter your Current address
               </label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                placeholder="Enter your full address"
+              <textarea
+                className="w-full bg-[#4B4B4B] border border-white rounded-lg p-3 text-white placeholder-gray-400 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                rows="3"
+                placeholder="Enter your Current address"
                 value={step2Data.address}
                 onChange={(e) => setStep2Data({ ...step2Data, address: e.target.value })}
               />
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-between pt-6 border-t border-gray-200">
+            <div className="flex justify-center space-x-4 pt-6">
               <button
-                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md"
+                className="bg-transparent border border-gray-500 text-white px-8 py-3 rounded-full font-medium hover:bg-gray-700 transition-all duration-200 "
                 onClick={() => setInterestStep(1)}
               >
-                <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back
+                Cancel
               </button>
               <button
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-3 rounded-lg font-semibold disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+                className="bg-white text-black px-8 py-3 rounded-full font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200"
                 disabled={!step2Data.note?.trim() || !step2Data.address?.trim() || submittingInterest}
                 onClick={async () => {
                   setSubmittingInterest(true)
@@ -703,19 +663,14 @@ const areAllOptionsSelected = () => {
               >
                 {submittingInterest ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-black inline" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Submitting...
+                    Sending...
                   </>
                 ) : (
-                  <>
-                    Submit Interest
-                    <svg className="w-5 h-5 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </>
+                  "Send"
                 )}
               </button>
             </div>

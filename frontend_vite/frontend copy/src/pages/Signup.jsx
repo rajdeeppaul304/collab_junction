@@ -65,7 +65,6 @@ const Signup = () => {
     try {
       const msg = await signup(formData)
       setSuccessMsg(msg || "Account created. Please verify your email before signing in.")
-
       setFormData({
         name: "",
         email: "",
@@ -82,112 +81,120 @@ const Signup = () => {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-gray-900 rounded-lg p-8 shadow-lg">
-          <div className="flex justify-center mb-6">
-            <Logo />
+ return (
+ <div className={`min-h-screen bg-[#0F0F0F] flex justify-center px-4 ${Object.keys(errors).length > 0 ? "py-12" : "items-center"}`}>
+
+    <div className="w-full max-w-md">
+      <div className="bg-[#1C1C1C] rounded-xl p-6 shadow-md border border-[#2B2B2B] w-full">
+        <div className="flex justify-center mb-4">
+          <Logo />
+        </div>
+
+        <h1 className="text-xl font-bold text-white text-center mb-4">Create an Account</h1>
+
+        {successMsg && (
+          <div className="bg-green-900/30 border border-green-500 text-green-400 px-3 py-2 rounded-md mb-3 text-sm">
+            {successMsg}
+          </div>
+        )}
+
+        {errors.general && (
+          <div className="bg-red-900/30 border border-red-500 text-red-400 px-3 py-2 rounded-md mb-3 text-sm">
+            {errors.general}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <Input
+            label="Full Name"
+            name="name"
+            placeholder="Enter your name"
+            value={formData.name}
+            onChange={handleChange}
+            error={errors.name}
+          />
+
+          <Input
+            label="Email"
+            name="email"
+            type="email"
+            placeholder="Enter your email"
+            value={formData.email}
+            onChange={handleChange}
+            error={errors.email}
+          />
+
+          <Input
+            label="Password"
+            name="password"
+            type="password"
+            placeholder="Create a password"
+            value={formData.password}
+            onChange={handleChange}
+            error={errors.password}
+          />
+
+          <Input
+            label="Confirm Password"
+            name="confirmPassword"
+            type="password"
+            placeholder="Confirm your password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            error={errors.confirmPassword}
+          />
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-300">I am a:</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                className={`py-2 rounded-md border text-sm font-medium transition ${
+                  formData.role === "CREATOR"
+                    ? "bg-yellow-400 text-black border-yellow-400"
+                    : "bg-transparent border-gray-700 text-white"
+                }`}
+                onClick={() => setFormData((prev) => ({ ...prev, role: "CREATOR" }))}
+              >
+                Creator
+              </button>
+              <button
+                type="button"
+                className={`py-2 rounded-md border text-sm font-medium transition ${
+                  formData.role === "BRAND"
+                    ? "bg-yellow-400 text-black border-yellow-400"
+                    : "bg-transparent border-gray-700 text-white"
+                }`}
+                onClick={() => setFormData((prev) => ({ ...prev, role: "BRAND" }))}
+              >
+                Brand
+              </button>
+            </div>
+            {errors.role && <p className="mt-1 text-sm text-red-500">{errors.role}</p>}
           </div>
 
-          <h1 className="text-2xl font-bold text-center mb-6">Create an Account</h1>
+          <Button
+            type="submit"
+            fullWidth
+            disabled={isLoading}
+            className="mt-3 bg-yellow-400 text-black font-semibold hover:bg-yellow-300 transition duration-200 py-2 rounded-md"
+          >
+            {isLoading ? "Creating..." : "Sign Up"}
+          </Button>
+        </form>
 
-          {successMsg && (
-            <div className="bg-green-900/30 border border-green-500 text-green-400 px-4 py-2 rounded-md mb-4">
-              {successMsg}
-            </div>
-          )}
-
-          {errors.general && (
-            <div className="bg-red-900/30 border border-red-500 text-red-400 px-4 py-2 rounded-md mb-4">
-              {errors.general}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <Input
-              label="Full Name"
-              name="name"
-              placeholder="Enter your full name"
-              value={formData.name}
-              onChange={handleChange}
-              error={errors.name}
-            />
-
-            <Input
-              label="Email"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-            />
-
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              placeholder="Create a password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-            />
-
-            <Input
-              label="Confirm Password"
-              name="confirmPassword"
-              type="password"
-              placeholder="Confirm your password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              error={errors.confirmPassword}
-            />
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1 text-gray-300">I am a:</label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  className={`p-3 rounded-md border text-center ${
-                    formData.role === "CREATOR"
-                      ? "bg-yellow-400 text-black border-yellow-400"
-                      : "bg-transparent border-gray-700 text-white"
-                  }`}
-                  onClick={() => setFormData((prev) => ({ ...prev, role: "CREATOR" }))}
-                >
-                  Creator
-                </button>
-                <button
-                  type="button"
-                  className={`p-3 rounded-md border text-center ${
-                    formData.role === "BRAND"
-                      ? "bg-yellow-400 text-black border-yellow-400"
-                      : "bg-transparent border-gray-700 text-white"
-                  }`}
-                  onClick={() => setFormData((prev) => ({ ...prev, role: "BRAND" }))}
-                >
-                  Brand
-                </button>
-              </div>
-              {errors.role && <p className="mt-1 text-sm text-red-500">{errors.role}</p>}
-            </div>
-
-            <Button type="submit" fullWidth disabled={isLoading} className="mt-4">
-              {isLoading ? "Creating Account..." : "Sign Up"}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center text-gray-400">
-            Already have an account?{" "}
-            <Link to="/signin" className="text-yellow-400 hover:underline">
-              Sign In
-            </Link>
-          </div>
+        <div className="mt-4 text-center text-gray-400 text-sm">
+          Already have an account?{" "}
+          <Link to="/signin" className="text-yellow-400 hover:underline">
+            Sign In
+          </Link>
         </div>
       </div>
     </div>
-  )
+  </div>
+)
+
+
 }
 
-export default Signup
+export default Signup 
