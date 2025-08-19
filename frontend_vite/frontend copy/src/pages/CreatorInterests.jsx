@@ -49,31 +49,7 @@ const CreatorInterests = () => {
           </Link>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar filters */}
-          <div className="w-full lg:w-1/4 bg-gray-900 p-4 rounded-lg">
-            <h2 className="font-semibold mb-4">Filters</h2>
-            <div className="mb-4">
-              <label className="block text-sm text-gray-400 mb-1">Minimum Followers</label>
-              <input
-                type="number"
-                value={minFollowers}
-                onChange={(e) => setMinFollowers(Number(e.target.value))}
-                className="w-full p-2 bg-gray-800 border border-gray-700 rounded"
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Product Name</label>
-              <input
-                type="text"
-                value={productFilter}
-                onChange={(e) => setProductFilter(e.target.value)}
-                className="w-full p-2 bg-gray-800 border border-gray-700 rounded"
-                placeholder="e.g. Sneakers"
-              />
-            </div>
-          </div>
+        <div className="mb-6">
 
           {/* Creator interest list */}
           <div className="w-full lg:w-3/4">

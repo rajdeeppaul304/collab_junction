@@ -442,6 +442,7 @@ def get_creator_interests():
 def view_creator_profile(creator_id):
     """Allows a brand to view a specific creator's public profile"""
     try:
+        print(creator_id,'hello')
         # Optional: Confirm the user is a brand
         current_user = get_jwt_identity()
         user_id = current_user.get("id")
@@ -451,6 +452,7 @@ def view_creator_profile(creator_id):
 
         profile = CreatorProfile.query.filter_by(user_id=creator_id).first()
         if not profile:
+            
             return jsonify({"error": "Profile not found"}), 404
 
         return jsonify({

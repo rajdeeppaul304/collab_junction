@@ -4,13 +4,11 @@ import About from "./pages/About"
 import Signin from "./pages/Signin"
 import Signup from "./pages/Signup"
 import Verify from "./pages/Verify"
-import CreatorDashboard from "./pages/CreatorDashboard"
 import BrandDashboard from "./pages/BrandDashboard"
 import Store from "./pages/Store"
 import Products from "./pages/Products"
 import ProductDetail from "./pages/ProductDetail"
 import Profile from "./pages/Profile"
-import CreatorProfile from "./pages/CreatorProfile"
 import CreatorInterests from "./pages/CreatorInterests"
 import AddProduct from "./pages/AddProduct"
 import EditProduct from "./pages/EditProduct"
@@ -39,14 +37,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
 
           {/* Protected Routes - CREATOR only */}
-          <Route
-            path="/dashboard/creator"
-            element={
-              <ProtectedRoute role="CREATOR">
-                <CreatorDashboard />
-              </ProtectedRoute>
-            }
-          />
+         
           <Route
             path="/profile"
             element={
@@ -64,7 +55,19 @@ function App() {
                 <BrandDashboard />
               </ProtectedRoute>
             }
+            
           />
+          <Route
+            path="/brand/creator-profile/:id"
+            element={
+              <ProtectedRoute role="BRAND">
+                <Profile viewOnly={true} />
+              </ProtectedRoute>
+            }
+            
+          />
+          
+          {/* <Route path="/product/:id" element={<ProductDetail />} /> */}
           <Route
             path="/add-product"
             element={
@@ -90,14 +93,7 @@ function App() {
             } 
           />
 
-          <Route 
-            path="/brand/creator-profile/:creatorId"
-            element={
-              <ProtectedRoute role="BRAND">
-                <CreatorProfile />
-              </ProtectedRoute>
-            }
-          />
+       
           <Route 
             path="/brand/interests"
             element={

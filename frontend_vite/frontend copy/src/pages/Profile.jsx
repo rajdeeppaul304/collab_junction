@@ -10,8 +10,12 @@ import { Link } from "react-router-dom"
 import getImageUrl from "../utils/getImageUrl"
 import { Dialog } from "@headlessui/react"
 import { useForm, useFieldArray } from "react-hook-form"
+import BrandAPI from "../brandApi"
+import { useParams } from "react-router-dom"
 
-const Profile = () => {
+const Profile = ({ viewOnly = false }) => {
+  const id=useParams().id
+  console.log('hello', viewOnly);
   const { user } = useAuth()
   const [profile, setProfile] = useState(null)
   const [collaborations, setCollaborations] = useState([])
@@ -42,16 +46,31 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const [profileRes, collabRes, interestsRes] = await Promise.all([
-          CreatorAPI.get("/profile"),
+        const [ collabRes, interestsRes] = await Promise.all([
+          // CreatorAPI.get("/profile"),
+          
           CreatorAPI.get("/collaborations"),
           CreatorAPI.get("/interests"),
+
+        ])
+        const [profileRes] = await Promise.all([
+          // CreatorAPI.get("/profile"),
+           viewOnly?BrandAPI.get(`/creators/${id}/profile`) : CreatorAPI.get("/profile") 
+
         ])
 
-        setProfile(profileRes.data)
-        setCollaborations(collabRes.data)
-        setInterests(interestsRes.data)
+        console.log(profileRes)
+
+
+        if (viewOnly === false) {
+          setCollaborations(collabRes.data);
+          setInterests(interestsRes.data);
+        }
+        setProfile(profileRes.data);
         setExistingImageUrl(profileRes.data.avatar || "")
+
+
+
       } catch (error) {
         console.error("Error fetching profile data:", error)
       } finally {
@@ -163,37 +182,38 @@ const Profile = () => {
               </p>
 
               <div className="flex gap-4 mt-4">
-                
-                  <a href={`https://instagram.com/${profile.social.instagram}`} target="_blank" rel="noopener noreferrer">
-                    <Button className="bg-white text-black font-semibold rounded-[20px] h-[50px] w-[170px] hover:bg-gray-200 flex items-center">
-                      <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-2">
-                        <img src="/Group.png" alt="Logo" className="w-4 h-4" />
-                      </div>
-                      @{profile.social.instagram}
-                    </Button>
-                  </a>
-              
-                  <a href={profile.social.website} target="_blank" rel="noopener noreferrer">
-                    <Button className="bg-white text-black font-semibold rounded-[20px] h-[50px] w-[227px] hover:bg-gray-200 flex items-center">
-                      <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-2">
-                        <img src="/Group.png" alt="Logo" className="w-4 h-4" />
-                      </div>
-                      Website
-                    </Button>
-                  </a>
-              
+
+                <a href={`https://instagram.com/${profile.social.instagram}`} target="_blank" rel="noopener noreferrer">
+                  <Button className="bg-white text-black font-semibold rounded-[20px] h-[50px] w-[170px] hover:bg-gray-200 flex items-center">
+                    <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-2">
+                      <img src="/Group.png" alt="Logo" className="w-4 h-4" />
+                    </div>
+                    @{profile.social.instagram}
+                  </Button>
+                </a>
+
+                <a href={profile.social.website} target="_blank" rel="noopener noreferrer">
+                  <Button className="bg-white text-black font-semibold rounded-[20px] h-[50px] w-[227px] hover:bg-gray-200 flex items-center">
+                    <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-2">
+                      <img src="/Group.png" alt="Logo" className="w-4 h-4" />
+                    </div>
+                    Website
+                  </Button>
+                </a>
+
               </div>
             </div>
           </div>
 
-          <div>
+           {!viewOnly &&
+           <div>
             <img
               src="/Group 74.png"
               alt="Edit"
               onClick={() => setIsEditOpen(true)}
               className="w-[50px] h-[50px] mr-6 cursor-pointer rounded-full transition duration-200 hover:opacity-60"
             />
-          </div>
+          </div>}
         </div>
 
         <hr className="w-[1278px] bg-gray-700 my-8 ml-[-23px]" />
@@ -207,11 +227,12 @@ const Profile = () => {
               {profile?.bio}
             </p>
 
-            <div className="flex justify-between items-center mb-2 mt-6">
+            {!viewOnly && <div className="flex justify-between items-center mb-2 mt-6">
               <h2 className="text-3xl font-bold">Your Shown Interests</h2>
-            </div>
+            </div>}
 
             {/* Interests Table */}
+            {!viewOnly &&<>
             <Card className="p-6 bg-[#2B2B2B] rounded-xl shadow-md border border-white mt-3">
               {interests.length === 0 ? (
                 <p className="text-gray-400">You haven't shown interest in any products yet.</p>
@@ -236,8 +257,8 @@ const Profile = () => {
                           <td className="py-3 px-6">
                             <span
                               className={`px-3 py-1 rounded-full text-xs  font-medium ${item.status === "active"
-                                  ? "bg-green-400/20 text-green-400"
-                                  : "bg-gray-400/20 text-gray-400"
+                                ? "bg-green-400/20 text-green-400"
+                                : "bg-gray-400/20 text-gray-400"
                                 }`}
                             >
                               {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Unknown"}
@@ -263,7 +284,7 @@ const Profile = () => {
               <h2 className="text-3xl font-bold">Product Collaborations</h2>
             </div>
 
-            {/* Collaborations Table */}
+            
             <Card className="p-6 bg-[#2B2B2B] rounded-xl shadow-md border border-white mt-3">
               {collaborations.length === 0 ? (
                 <p className="text-gray-400">No product collaborations yet.</p>
@@ -311,14 +332,15 @@ const Profile = () => {
                   </table>
                 </div>
               )}
-            </Card>
+            </Card></>}
           </div>
+            
 
           {/* Account Information Sidebar */}
           <Card className="p-6 bg-[#2B2B2B] rounded-xl ml-[50px] shadow-md w-[300px] h-[420px]">
             <h2 className="text-xl font-bold mb-4">Account Information</h2>
             <div className="space-y-3 text-sm text-gray-400 leading-relaxed">
-              <p>User ID (UID): <span className="text-white">{profile?.uid}</span></p>
+              <p>User ID (UID): <span className="text-white">{profile?.id}</span></p>
               <p>Name: <span className="text-white">{profile?.name}</span></p>
               <p>Email: <span className="text-white">{profile?.email}</span></p>
               <p>Phone Number: <span className="text-white">{profile?.phone || "Not provided"}</span></p>
@@ -334,6 +356,7 @@ const Profile = () => {
       </div>
 
       {/* Edit Profile Modal */}
+       {!viewOnly &&
       <Dialog open={isEditOpen} onClose={() => setIsEditOpen(false)} className="relative z-50">
         {/* Overlay */}
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
@@ -489,7 +512,7 @@ const Profile = () => {
             </div>
           </Dialog.Panel>
         </div>
-      </Dialog>
+      </Dialog>}
     </MainLayout>
   )
 }
