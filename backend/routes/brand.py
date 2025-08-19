@@ -11,7 +11,7 @@ brand = Blueprint('brand', __name__)
 @brand.route("/get_products", methods=["GET"])
 @jwt_required()
 def get_products():
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
 
     if not user:
@@ -51,7 +51,7 @@ def get_product_analytics(product_id):
 @brand.route("/brand-info", methods=["GET"])
 @jwt_required()
 def get_brand_info():
-    user_id = get_jwt_identity()["id"]
+    user_id = int(get_jwt_identity())
     
     brand_profile = BrandProfile.query.filter_by(user_id=user_id).first()
 
@@ -81,7 +81,7 @@ def get_brand_info():
 @brand.route("/brand-info", methods=["PUT"])
 @jwt_required()
 def update_brand_info():
-    user_id = get_jwt_identity()["id"]
+    user_id = int(get_jwt_identity())
     brand_profile = BrandProfile.query.filter_by(user_id=user_id).first()
 
     if not brand_profile:
@@ -131,7 +131,7 @@ def update_brand_info():
 @jwt_required()
 def add_product():
     print()
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     
     name = request.form.get("name")
     category = request.form.get("category")
@@ -221,7 +221,7 @@ def add_product():
 @brand.route("/products/<int:product_id>", methods=["PUT"])
 @jwt_required()
 def edit_product(product_id):
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     
     product = Product.query.filter_by(id=product_id, brand_id=current_user_id).first()
     if not product:
@@ -329,7 +329,7 @@ def edit_product(product_id):
 @brand.route("/stats", methods=["GET"])
 @jwt_required()
 def brand_stats():
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     
     total_products = Product.query.filter_by(brand_id=current_user_id).count()
 
@@ -356,7 +356,7 @@ def brand_stats():
 @jwt_required()
 def brand_products():
 
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     limit = int(request.args.get("limit", 10))
     
     products = Product.query.filter_by(brand_id=current_user_id).limit(limit).all()
@@ -387,7 +387,7 @@ def recommended_creators():
         .join(User, CreatorProfile.user_id == User.id)
         .join(CreatorInterest, CreatorInterest.creator_id == User.id)
         .join(Product, CreatorInterest.product_id == Product.id)
-        .filter(Product.brand_id == get_jwt_identity().get("id"))
+        .filter(Product.brand_id == int(get_jwt_identity()))
         .distinct()
         .limit(limit)
         .all()
@@ -408,7 +408,7 @@ def recommended_creators():
 @brand.route("/interests", methods=["GET"])
 @jwt_required()
 def get_creator_interests():
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
 
     interests = (
         CreatorInterest.query
@@ -487,7 +487,7 @@ def view_creator_profile(creator_id):
 @brand.route("/interests/recent", methods=["GET"])
 @jwt_required()
 def get_recent_interests():
-    current_brand_id = get_jwt_identity().get("id")
+    current_brand_id = int(get_jwt_identity())
 
     try:
         # Get brand's products
@@ -524,7 +524,7 @@ def get_recent_interests():
 @brand.route("/products/<int:product_id>", methods=["DELETE"])
 @jwt_required()
 def delete_product(product_id):
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     
     product = Product.query.filter_by(id=product_id, brand_id=current_user_id).first()
     if not product:
@@ -542,7 +542,7 @@ def delete_product(product_id):
 @brand.route("/products/<int:product_id>/status", methods=["PATCH"])
 @jwt_required()
 def update_product_status(product_id):
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     data = request.get_json()
     new_status = data.get("status")
     
@@ -568,7 +568,7 @@ def update_product_status(product_id):
 @brand.route("/products/<int:product_id>", methods=["GET"])
 @jwt_required(optional=True)
 def get_product_detail(product_id):
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     product = Product.query.filter_by(id=product_id, brand_id=current_user_id).first()
     print(product.options)
     if not product:
@@ -593,7 +593,7 @@ def get_product_detail(product_id):
 @brand.route("/products/<int:product_id>/interest", methods=["GET"])
 @jwt_required()
 def check_product_interest(product_id):
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     
     # Check if current user (brand) has interest in their own product (probably not needed)
     # This endpoint might be better suited for creators to check their interest

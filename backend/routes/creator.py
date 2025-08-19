@@ -18,8 +18,8 @@ creator = Blueprint('creator', __name__)
 @creator.route("/get_products", methods=["GET"])
 @jwt_required()
 def get_products():
-    identity = get_jwt_identity()
-    user = User.query.get(identity["id"])
+    identity = int(get_jwt_identity())
+    user = User.query.get(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -35,7 +35,7 @@ def get_products():
 # @creator.route("/products", methods=["GET"])
 # @jwt_required()
 # def get_creator_products():
-#     current_user_id = get_jwt_identity().get("id")
+#     current_user_id = int(get_jwt_identity())
     
 #     # Get query parameters
 #     category = request.args.get("category")
@@ -93,7 +93,7 @@ def get_creator_product_categories():
 @creator.route("/stats", methods=["GET"])
 @jwt_required()
 def get_creator_stats():
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     
     # Count collaborations (accepted offers)
     collaborations = Offer.query.filter(
@@ -128,7 +128,7 @@ def get_creator_stats():
 @creator.route("/offers", methods=["GET"])
 @jwt_required()
 def get_creator_offers():
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     limit = int(request.args.get("limit", 5))
 
     offers = (
@@ -160,7 +160,7 @@ def get_creator_offers():
 @jwt_required()
 def get_creator_profile():
     
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     
     profile = CreatorProfile.query.filter_by(user_id=current_user_id).first()
     if not profile:
@@ -193,7 +193,7 @@ def get_creator_profile():
 @creator.route("/profile", methods=["PUT"])
 @jwt_required()
 def update_creator_profile():
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     
     profile = CreatorProfile.query.filter_by(user_id=current_user_id).first()
     if not profile:
@@ -302,7 +302,7 @@ def update_creator_profile():
 @creator.route("/collaborations", methods=["GET"])
 @jwt_required()
 def get_creator_collaborations():
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     
     collaborations = (
         Offer.query
@@ -379,7 +379,7 @@ def get_product_types():
 @creator.route("/products", methods=["GET"])
 @jwt_required()
 def get_creator_products():
-    current_user_id = get_jwt_identity().get("id")
+    current_user_id = int(get_jwt_identity())
     
     # Get query parameters
     category = request.args.get("category")
@@ -572,7 +572,7 @@ def get_product_detail(product_id):
 def check_product_interest(product_id):
     """Check if current user has expressed interest in a product"""
     try:
-        current_user_id = get_jwt_identity().get("id")
+        current_user_id = int(get_jwt_identity())
         
         # Check if product exists
         product = Product.query.filter_by(id=product_id, status="active").first()
@@ -600,7 +600,7 @@ def check_product_interest(product_id):
 # def get_creator_interests():
 #     """Get all products the creator has shown interest in"""
 #     try:
-#         current_user_id = get_jwt_identity().get("id")
+#         current_user_id = int(get_jwt_identity())
 
 #         interests = (
 #             CreatorInterest.query
@@ -638,7 +638,7 @@ def check_product_interest(product_id):
 @jwt_required()
 def express_product_interest(product_id):
     try:
-        current_user_id = get_jwt_identity().get("id")
+        current_user_id = int(get_jwt_identity())
         data = request.get_json() or {}
 
         print("Received interest data:", data)  # Log dynamic data
@@ -685,7 +685,7 @@ def express_product_interest(product_id):
 def remove_product_interest(product_id):
     """Remove interest in a product"""
     try:
-        current_user_id = get_jwt_identity().get("id")
+        current_user_id = int(get_jwt_identity())
         
         # Find and remove the interest record
         interest = CreatorInterest.query.filter_by(
@@ -765,7 +765,7 @@ def get_related_products(product_id):
 def get_user_interests():
     """Get all products the current user has expressed interest in"""
     try:
-        current_user_id = get_jwt_identity().get("id")
+        current_user_id = int(get_jwt_identity())
         
         interests = (
             CreatorInterest.query

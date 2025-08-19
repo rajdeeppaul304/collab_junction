@@ -99,7 +99,15 @@ def signin():
         return jsonify({"msg": "Please verify your email before signing in."}), 403
 
     role = user.user_role.name if user.user_role else "unknown"
-    jwt_token = create_access_token(identity={"id": user.id, "email": user.email, "role": role})
+    # jwt_token = create_access_token(identity={"id": user.id, "email": user.email, "role": role})
+    jwt_token = create_access_token(
+    identity=str(user.id),  # ✅ must be a string
+    additional_claims={
+        "email": user.email,
+        "role": role
+    }
+)
+
 
     return jsonify({
         "token": jwt_token,
@@ -116,8 +124,8 @@ def signin():
 @jwt_required()
 def get_current_user():
     print("error here")
-    identity = get_jwt_identity()
-    user = User.query.get(identity["id"])
+    identity = int(get_jwt_identity())
+    user = User.query.get(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -165,7 +173,14 @@ def set_role():
     db.session.commit()
 
     # ✅ Generate JWT token like in signin
-    token = create_access_token(identity={"email": user.email, "role": user.user_role.name})
+    # token = create_access_token(identity={"email": user.email, "role": user.user_role.name})
+    token = create_access_token(
+    identity=user.email,  # ✅ email is already a string
+    additional_claims={
+        "role": user.user_role.name
+    }
+)
+
 
     return jsonify({"msg": "User created and signed in.", "token": token})
 
@@ -173,7 +188,7 @@ def set_role():
 from flask import Blueprint, jsonify, redirect, url_for
 from extensions import db, oauth
 from models import User, UserRole
-from flask_jwt_extended import create_access_token
+# from flask_jwt_extended import create_access_token
 
 
 @auth.route('/login/github')
