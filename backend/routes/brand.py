@@ -33,10 +33,11 @@ static for now will implement in the future,
 @brand.route("/products/<int:product_id>/analytics", methods=["GET"])
 @jwt_required()
 def get_product_analytics(product_id):
+    interest_count = CreatorInterest.query.filter_by(product_id=product_id).count()
     return jsonify({
-        "views": 1234,
-        "interestCount": 78,
-        "conversionRate": 5.3
+        
+        "interestCount": interest_count,
+        
     })
 
 
@@ -421,9 +422,12 @@ def get_creator_interests():
 
     interest_data = []
     for interest in interests:
+        # print(interest.data)
         creator = interest.creator
         profile = creator.creator_profile
+        # print('profile',profile)
         product = interest.product
+        # data= interest.data
 
         interest_data.append({
             "id": interest.id,
@@ -433,6 +437,11 @@ def get_creator_interests():
             "productId": product.id,
             "productName": product.name,
             "interestedAt": interest.created_at.isoformat(),
+            "data": interest.data,
+            
+
+            
+
         })
 
     return jsonify(interest_data)
@@ -454,12 +463,13 @@ def view_creator_profile(creator_id):
         if not profile:
             
             return jsonify({"error": "Profile not found"}), 404
+        languages_list = profile.languages_spoken.split(", ") if profile.languages_spoken else []
 
         return jsonify({
             "id": creator_id,
             "name": profile.display_name,
             "bio": profile.bio,
-            "languages": [],  # Add in model if necessary
+            "languages": languages_list,  # Add in model if necessary
             "social": {
                 "instagram": profile.instagram,
                 "youtube": profile.youtube,
@@ -467,7 +477,8 @@ def view_creator_profile(creator_id):
                 "twitter": profile.twitter,
                 "website": profile.portfolio_url
             },
-            "phone": "add phone number"  # Add to schema if needed
+            "phone": "add phone number" , # Add to schema if needed
+            "avatar": profile.avatar_url
         })
     except Exception as e:
         print(f"Error retrieving creator profile: {e}")

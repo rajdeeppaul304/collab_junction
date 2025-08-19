@@ -166,13 +166,16 @@ def get_creator_profile():
     if not profile:
         return jsonify({"error": "Profile not found"}), 404
 
+    # Convert languages_spoken string to list
+    languages_list = profile.languages_spoken.split(", ") if profile.languages_spoken else []
+    print('hi',languages_list)
+
     return jsonify({
         "id": current_user_id,
         "name": profile.display_name,
         "short_bio": profile.short_bio,
-
         "bio": profile.bio,
-        "languages": [],  # Add to CreatorProfile if needed
+        "languages": languages_list,  # Send as an array
         "social": {
             "instagram": profile.instagram,
             "youtube": profile.youtube,
@@ -180,10 +183,9 @@ def get_creator_profile():
             "twitter": profile.twitter,
             "website": profile.portfolio_url
         },
-        "phone": "add phone number",  # Add to CreatorProfile if needed
+        "phone": getattr(profile, "phone", None),
         "avatar": profile.avatar_url
     })
-
 
 
 
@@ -199,40 +201,40 @@ def update_creator_profile():
 
     # Determine data and files depending on content type
     if request.content_type and 'multipart/form-data' in request.content_type:
-        data = request.form.to_dict()
         files = request.files
 
-        # Parse JSON fields if sent as stringified JSON
+        # Get languages[] from form data as list
+        languages_list = request.form.getlist("languages[]")
+        # Get other fields as dict
+        data = request.form.to_dict()
+
+        # Merge parsed languages
+        data['languages'] = languages_list
+        print(data['languages'])
+        # Parse social JSON field if sent
         if 'social' in data:
             try:
                 data['social'] = json.loads(data['social'])
             except (json.JSONDecodeError, TypeError):
                 data['social'] = {}
-
-        if 'languages' in data:
-            try:
-                data['languages'] = json.loads(data['languages'])
-            except (json.JSONDecodeError, TypeError):
-                data['languages'] = ""
     else:
         data = request.get_json() or {}
         files = {}
 
     # Handle avatar image removal
-    if data.get("image_deleted") == "true":
-        if profile.avatar_url:
-            old_file_path = profile.avatar_url.replace("/static/", "static/")
-            if os.path.exists(old_file_path):
-                try:
-                    os.remove(old_file_path)
-                except OSError:
-                    pass
+    if data.get("image_deleted") == "true" and profile.avatar_url:
+        old_file_path = profile.avatar_url.replace("/static/", "static/")
+        if os.path.exists(old_file_path):
+            try:
+                os.remove(old_file_path)
+            except OSError:
+                pass
         profile.avatar_url = None
 
     # Handle avatar image upload
     image = files.get("image")
     if image and image.filename:
-        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif','avif'}
         if '.' in image.filename and image.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
             filename = f"{uuid.uuid4().hex}_{secure_filename(image.filename)}"
             upload_dir = "static/avatars"
@@ -241,7 +243,7 @@ def update_creator_profile():
             image.save(path)
             profile.avatar_url = f"/static/avatars/{filename}"
         else:
-            return jsonify({"error": "Invalid file type. Only PNG, JPG, JPEG, and GIF are allowed."}), 400
+            return jsonify({"error": "Invalid file type. Only PNG, JPG, JPEG, GIF, and AVIF are allowed."}), 400
 
     # Update text fields
     if 'name' in data:
@@ -252,10 +254,13 @@ def update_creator_profile():
         profile.short_bio = data['short_bio']
     if 'phone' in data:
         profile.phone = data['phone']
+
+    # Update languages
     if 'languages' in data:
-        profile.languages_spoken = (
-            ", ".join(data['languages']) if isinstance(data['languages'], list) else data['languages']
-        )
+        if isinstance(data['languages'], list):
+            profile.languages_spoken = ", ".join(data['languages'])
+        else:
+            profile.languages_spoken = data['languages']
 
     # Update social media links
     social = data.get("social", {})
@@ -289,6 +294,8 @@ def update_creator_profile():
             }
         }
     }), 200
+
+
 
 
 

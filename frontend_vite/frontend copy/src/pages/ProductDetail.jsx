@@ -445,17 +445,10 @@ const areAllOptionsSelected = () => {
     ) : productAnalytics ? (
       <div className="flex justify-start flex-wrap gap-6">
         <div className="w-[200px] p-4 bg-[#242424] rounded-lg shadow text-white">
-          <p className="text-sm text-white">Views</p>
-          <p className="text-xl font-semibold">{productAnalytics.views}</p>
-        </div>
-        <div className="w-[200px] p-4 bg-[#242424] rounded-lg shadow text-white">
           <p className="text-sm text-white">Interest Count</p>
           <p className="text-xl font-semibold">{productAnalytics.interestCount}</p>
         </div>
-        <div className="w-[200px] p-4 bg-[#242424] rounded-lg shadow text-white">
-          <p className="text-sm text-white">Conversion Rate</p>
-          <p className="text-xl font-semibold">{productAnalytics.conversionRate}%</p>
-        </div>
+        
       </div>
     ) : (
       <p className="text-gray-400">No analytics data available.</p>

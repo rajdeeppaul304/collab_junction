@@ -15,7 +15,6 @@ import { useParams } from "react-router-dom"
 
 const Profile = ({ viewOnly = false }) => {
   const id=useParams().id
-  console.log('hello', viewOnly);
   const { user } = useAuth()
   const [profile, setProfile] = useState(null)
   const [collaborations, setCollaborations] = useState([])
@@ -107,6 +106,7 @@ const Profile = ({ viewOnly = false }) => {
 
     // Append languages array
     data.languages.forEach((lang) => formData.append("languages[]", lang.value))
+    console.log(data.languages)
 
     // Append social data
     formData.append("social", JSON.stringify({
@@ -174,7 +174,7 @@ const Profile = ({ viewOnly = false }) => {
               <p className="text-sm text-white mb-2 flex items-center text-center">
                 <img src="/Group.png" alt="Logo" className="w-6 h-6 mr-2 mb-10 mt-3" />
                 <span className="font-semibold mb-10 mt-3">Speaks:</span>&nbsp;
-                {profile?.speaks?.join(", ")}
+                {profile?.languages?.join(", ")}
               </p>
 
               <p className="text-2xl font-semibold text-yellow-300">
@@ -280,59 +280,9 @@ const Profile = ({ viewOnly = false }) => {
               )}
             </Card>
 
-            <div className="flex justify-between items-center mb-2 mt-6">
-              <h2 className="text-3xl font-bold">Product Collaborations</h2>
-            </div>
 
             
-            <Card className="p-6 bg-[#2B2B2B] rounded-xl shadow-md border border-white mt-3">
-              {collaborations.length === 0 ? (
-                <p className="text-gray-400">No product collaborations yet.</p>
-              ) : (
-                <div className="overflow-x-auto -m-6 mb-0">
-                  <table className="w-full text-left text-sm table-fixed">
-                    <thead>
-                      <tr className="bg-[#171717] text-white">
-                        <th className="py-4 px-6 min-h-[50px] w-1/5 rounded-tl-xl">Product</th>
-                        <th className="py-4 px-6 min-h-[50px] w-1/5">Company</th>
-                        <th className="py-4 px-6 min-h-[50px] w-1/5">Price</th>
-                        <th className="py-4 px-6 min-h-[50px] w-1/5">Status</th>
-                        <th className="py-4 px-6 min-h-[50px] w-1/5 rounded-tr-xl">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="px-6">
-                      {collaborations.map((collab, index) => (
-                        <tr key={index} className="font-bold text-white">
-                          <td className="py-3 px-6">{collab.name}</td>
-                          <td className="py-3 px-6">{collab.company}</td>
-                          <td className="py-3 px-6">₹{collab.price}</td>
-                          <td className="py-3 px-6">
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-400/20 text-green-400">
-                              Active
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-medium ${product.status === "active"
-                                ? "bg-green-400/20 text-green-400"
-                                : "bg-gray-400/20 text-gray-400"
-                                }`}
-                            >
-                              {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-400/20 text-blue-400">
-                              View
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card></>}
+           </>}
           </div>
             
 
