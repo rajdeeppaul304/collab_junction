@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const BrandAPI = axios.create({ baseURL: "http://localhost:5000/brand" })
+const BrandAPI = axios.create({ baseURL: `${import.meta.env.VITE_API_BASE_URL}/brand` })
 
 // Attach JWT token to every request
 BrandAPI.interceptors.request.use((req) => {

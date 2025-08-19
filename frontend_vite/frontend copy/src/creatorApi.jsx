@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const CreatorAPI = axios.create({ baseURL: "http://localhost:5000/creator" })
+const CreatorAPI = axios.create({ baseURL: `${import.meta.env.VITE_API_BASE_URL}/creator` })
 
 // Add a request interceptor to attach the JWT token to every request
 CreatorAPI.interceptors.request.use((req) => {
