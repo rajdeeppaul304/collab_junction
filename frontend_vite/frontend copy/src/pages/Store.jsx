@@ -86,10 +86,7 @@ const Store = () => {
         <p className="text-white text-s ml-5">By {product.brand || "Company"}</p>
         <p className="text-green-400 text-s  ml-5">Rs. {product.price}</p>
       </div>
-      <button className="w-full max-w-[190px] bg-white hover:bg-green-300 mt-1 text-black hover:text-black font-semibold rounded-xl text-sm py-1.5 ml-3 border border-gray-600 transition-colors duration-300"
->
-        I'm Interested
-      </button>
+      
     </div>
   </div>
 )
