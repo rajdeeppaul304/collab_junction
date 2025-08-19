@@ -19,7 +19,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     username = db.Column(db.String(80), nullable=True)  # Optional GitHub username
     name = db.Column(db.String(100), nullable=True)     # ✅ NEW: For full name
-    password = db.Column(db.String(128), nullable=True)  # ✅ Allow null for OAuth
+    password = db.Column(db.Text, nullable=False) # ✅ Allow null for OAuth
     is_verified = db.Column(db.Boolean, default=False)
     user_role = db.Column(SqlEnum(UserRole), nullable=False)
 

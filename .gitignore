@@ -1,1 +1,4 @@
 collab_junction/backend/instance/users.db
+
+backend/instance/users.db
+backend/.env
