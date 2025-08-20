@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, User, Product, ProductImage, ProductSize, CreatorInterest, Offer, CreatorProfile, BrandProfile
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
@@ -30,17 +30,43 @@ def get_products():
 '''
 static for now will implement in the future,
 '''
+from flask import jsonify
+from flask_jwt_extended import jwt_required
+from sqlalchemy import func
+from datetime import datetime
+from models import db, CreatorInterest, ProductView
+
 @brand.route("/products/<int:product_id>/analytics", methods=["GET"])
 @jwt_required()
 def get_product_analytics(product_id):
+    # 1. Interest count
     interest_count = CreatorInterest.query.filter_by(product_id=product_id).count()
+
+    # 2. Views grouped by exact hour (optional: change to 'minute' or remove truncation for full timestamps)
+    view_data = (
+        db.session.query(
+            func.date_trunc('hour', ProductView.viewed_at).label('timestamp'),
+            func.count().label('views')
+        )
+        .filter(ProductView.product_id == product_id)
+        .group_by(func.date_trunc('hour', ProductView.viewed_at))
+        .order_by(func.date_trunc('hour', ProductView.viewed_at))
+        .all()
+    )
+
+    # 3. Convert to JSON-friendly format
+    views = [
+        {
+            "timestamp": ts.isoformat(),  # includes date and time, ISO 8601 format
+            "views": count
+        }
+        for ts, count in view_data
+    ]
+
     return jsonify({
-        
         "interestCount": interest_count,
-        
+        "views": views,
     })
-
-
 
 
 
@@ -453,16 +479,18 @@ def view_creator_profile(creator_id):
     try:
         print(creator_id,'hello')
         # Optional: Confirm the user is a brand
-        current_user = get_jwt_identity()
-        user_id = current_user.get("id")
-        user_role = current_user.get("role")
+        # current_user = get_jwt_identity()
+        # user_id = current_user.get("id")
+        # user_role = current_user.get("role")
+        claims = get_jwt()
+        user_role = claims.get("role")
         if user_role != "BRAND":
             return jsonify({"error": "Access denied"}), 403
 
         profile = CreatorProfile.query.filter_by(user_id=creator_id).first()
         if not profile:
-            
             return jsonify({"error": "Profile not found"}), 404
+        
         languages_list = profile.languages_spoken.split(", ") if profile.languages_spoken else []
 
         return jsonify({
@@ -477,7 +505,8 @@ def view_creator_profile(creator_id):
                 "twitter": profile.twitter,
                 "website": profile.portfolio_url
             },
-            "phone": "add phone number" , # Add to schema if needed
+            "phone": profile.phone_number,
+            "followers": profile.follower_count,
             "avatar": profile.avatar_url
         })
     except Exception as e:

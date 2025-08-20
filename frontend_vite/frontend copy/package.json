@@ -11,15 +11,20 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",
+    "@tailwindcss/vite": "^4.1.12",
     "axios": "^1.9.0",
+    "chartjs": "^0.3.24",
     "dotenv": "^17.2.1",
+    "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.523.0",
     "react": "^19.1.0",
+    "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.58.1",
     "react-router-dom": "^7.6.0",
-    "swiper": "^11.2.8"
+    "swiper": "^11.2.8",
+    "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

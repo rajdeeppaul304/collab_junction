@@ -14,7 +14,7 @@ import BrandAPI from "../brandApi"
 import { useParams } from "react-router-dom"
 
 const Profile = ({ viewOnly = false }) => {
-  const id=useParams().id
+  const id = useParams().id
   const { user } = useAuth()
   const [profile, setProfile] = useState(null)
   const [collaborations, setCollaborations] = useState([])
@@ -33,7 +33,8 @@ const Profile = ({ viewOnly = false }) => {
       languages: [{ value: "" }],
       instagram: "",
       website: "",
-      phone: ""
+      phone: "",
+      followers: ""
     }
   })
 
@@ -45,16 +46,16 @@ const Profile = ({ viewOnly = false }) => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const [ collabRes, interestsRes] = await Promise.all([
+        const [collabRes, interestsRes] = await Promise.all([
           // CreatorAPI.get("/profile"),
-          
+
           CreatorAPI.get("/collaborations"),
           CreatorAPI.get("/interests"),
 
         ])
         const [profileRes] = await Promise.all([
           // CreatorAPI.get("/profile"),
-           viewOnly?BrandAPI.get(`/creators/${id}/profile`) : CreatorAPI.get("/profile") 
+          viewOnly ? BrandAPI.get(`/creators/${id}/profile`) : CreatorAPI.get("/profile")
 
         ])
 
@@ -89,7 +90,8 @@ const Profile = ({ viewOnly = false }) => {
         languages: profile.languages?.map(lang => ({ value: lang })) || [{ value: "" }],
         instagram: profile.social?.instagram || "",
         website: profile.social?.website || "",
-        phone: profile.phone || ""
+        phone: profile.phone || "",
+        followers: profile.followers || ""
       })
       setExistingImageUrl(profile.avatar || "")
     }
@@ -103,6 +105,7 @@ const Profile = ({ viewOnly = false }) => {
     formData.append("short_bio", data.short_bio)
     formData.append("bio", data.bio)
     formData.append("phone", data.phone)
+    formData.append("followers", data.followers)
 
     // Append languages array
     data.languages.forEach((lang) => formData.append("languages[]", lang.value))
@@ -172,22 +175,23 @@ const Profile = ({ viewOnly = false }) => {
 
 
               <p className="text-sm text-white mb-2 flex items-center text-center">
-                <img src="/Group.png" alt="Logo" className="w-6 h-6 mr-2 mb-10 mt-3" />
-                <span className="font-semibold mb-10 mt-3">Speaks:</span>&nbsp;
-                {profile?.languages?.join(", ")}
+                <img src="/Group.png" alt="Logo" className="w-6 h-6 mr-2 mb-6 mt-3" />
+                <span className="font-semibold mb-6 mt-2">Speaks:</span>&nbsp;
+                <span className="font-normal mb-6 mt-2">{profile?.languages?.join(", ")}</span>&nbsp;
+
               </p>
 
               <p className="text-2xl font-semibold text-yellow-300">
-                {profile?.followers || "93k"} Followers
+                {(profile?.followers || 0).toLocaleString("en-IN")} Followers
               </p>
 
               <div className="flex gap-4 mt-4">
 
                 <a href={`https://instagram.com/${profile.social.instagram}`} target="_blank" rel="noopener noreferrer">
-                  <Button className="bg-white text-black font-semibold rounded-[20px] h-[50px] w-[170px] hover:bg-gray-200 flex items-center">
-                    <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-2">
+                  <Button className="bg-white text-black font-semibold rounded-[20px] h-[50px]  hover:bg-gray-200 flex items-center">
+                    {/* <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-2">
                       <img src="/Group.png" alt="Logo" className="w-4 h-4" />
-                    </div>
+                    </div> */}
                     @{profile.social.instagram}
                   </Button>
                 </a>
@@ -205,15 +209,15 @@ const Profile = ({ viewOnly = false }) => {
             </div>
           </div>
 
-           {!viewOnly &&
-           <div>
-            <img
-              src="/Group 74.png"
-              alt="Edit"
-              onClick={() => setIsEditOpen(true)}
-              className="w-[50px] h-[50px] mr-6 cursor-pointer rounded-full transition duration-200 hover:opacity-60"
-            />
-          </div>}
+          {!viewOnly &&
+            <div>
+              <img
+                src="/Group 74.png"
+                alt="Edit"
+                onClick={() => setIsEditOpen(true)}
+                className="w-[50px] h-[50px] mr-6 cursor-pointer rounded-full transition duration-200 hover:opacity-60"
+              />
+            </div>}
         </div>
 
         <hr className="w-[1278px] bg-gray-700 my-8 ml-[-23px]" />
@@ -232,59 +236,59 @@ const Profile = ({ viewOnly = false }) => {
             </div>}
 
             {/* Interests Table */}
-            {!viewOnly &&<>
-            <Card className="p-6 bg-[#2B2B2B] rounded-xl shadow-md border border-white mt-3">
-              {interests.length === 0 ? (
-                <p className="text-gray-400">You haven't shown interest in any products yet.</p>
-              ) : (
-                <div className="overflow-x-auto -m-6 mb-0">
-                  <table className="w-full text-left text-sm table-fixed">
-                    <thead>
-                      <tr className="bg-[#171717] text-white">
-                        <th className="py-4 px-6 min-h-[50px] w-1/5 rounded-tl-xl">Product</th>
-                        <th className="py-4 px-6 min-h-[50px] w-1/5">Category</th>
-                        <th className="py-4 px-6 min-h-[50px] w-1/5">Price</th>
-                        <th className="py-4 px-6 min-h-[50px] w-1/5">Status</th>
-                        <th className="py-4 px-6 min-h-[50px] w-1/5 rounded-tr-xl">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="px-6">
-                      {interests.map((item, index) => (
-                        <tr key={index} className="font-bold text-white">
-                          <td className="py-3 px-6">{item.name}</td>
-                          <td className="py-3 px-6">{item.category}</td>
-                          <td className="py-3 px-6">₹{item.price}</td>
-                          <td className="py-3 px-6">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs  font-medium ${item.status === "active"
-                                ? "bg-green-400/20 text-green-400"
-                                : "bg-gray-400/20 text-gray-400"
-                                }`}
-                            >
-                              {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Unknown"}
-                            </span>
-                          </td>
-
-                          <td className="py-3 px-4">
-                            <Link to={`/product/${item.id}`}>
-                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-400/20 text-blue-400">
-                                View
-                              </span>
-                            </Link>
-                          </td>
+            {!viewOnly && <>
+              <Card className="p-6 bg-[#2B2B2B] rounded-xl shadow-md border border-white mt-3">
+                {interests.length === 0 ? (
+                  <p className="text-gray-400">You haven't shown interest in any products yet.</p>
+                ) : (
+                  <div className="overflow-x-auto -m-6 mb-0">
+                    <table className="w-full text-left text-sm table-fixed">
+                      <thead>
+                        <tr className="bg-[#171717] text-white">
+                          <th className="py-4 px-6 min-h-[50px] w-1/5 rounded-tl-xl">Product</th>
+                          <th className="py-4 px-6 min-h-[50px] w-1/5">Category</th>
+                          <th className="py-4 px-6 min-h-[50px] w-1/5">Price</th>
+                          <th className="py-4 px-6 min-h-[50px] w-1/5">Status</th>
+                          <th className="py-4 px-6 min-h-[50px] w-1/5 rounded-tr-xl">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
+                      </thead>
+                      <tbody className="px-6">
+                        {interests.map((item, index) => (
+                          <tr key={index} className="font-bold text-white">
+                            <td className="py-3 px-6">{item.name}</td>
+                            <td className="py-3 px-6">{item.category}</td>
+                            <td className="py-3 px-6">₹{item.price}</td>
+                            <td className="py-3 px-6">
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs  font-medium ${item.status === "active"
+                                  ? "bg-green-400/20 text-green-400"
+                                  : "bg-gray-400/20 text-gray-400"
+                                  }`}
+                              >
+                                {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Unknown"}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <Link to={`/product/${item.id}`}>
+                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-400/20 text-blue-400">
+                                  View
+                                </span>
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
 
 
-            
-           </>}
+
+            </>}
           </div>
-            
+
 
           {/* Account Information Sidebar */}
           <Card className="p-6 bg-[#2B2B2B] rounded-xl ml-[50px] shadow-md w-[300px] h-[420px]">
@@ -306,163 +310,176 @@ const Profile = ({ viewOnly = false }) => {
       </div>
 
       {/* Edit Profile Modal */}
-       {!viewOnly &&
-      <Dialog open={isEditOpen} onClose={() => setIsEditOpen(false)} className="relative z-50">
-        {/* Overlay */}
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
+      {!viewOnly &&
+        <Dialog open={isEditOpen} onClose={() => setIsEditOpen(false)} className="relative z-50">
+          {/* Overlay */}
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
 
-        {/* Modal Container */}
-        <div className="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto">
-          <Dialog.Panel className="w-full max-w-2xl bg-[#1e1e1e] text-white rounded-xl shadow-xl p-6 flex flex-col max-h-[90vh]">
-            {/* Title */}
-            <Dialog.Title className="text-xl font-bold mb-6">Edit Profile</Dialog.Title>
+          {/* Modal Container */}
+          <div className="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto">
+            <Dialog.Panel className="w-full max-w-2xl bg-[#1e1e1e] text-white rounded-xl shadow-xl p-6 flex flex-col max-h-[90vh]">
+              {/* Title */}
+              <Dialog.Title className="text-xl font-bold mb-6">Edit Profile</Dialog.Title>
 
-            {/* Form Content */}
-            <form onSubmit={handleSubmit(handleSave)} className="flex flex-col flex-grow space-y-6 overflow-y-auto pr-4 pl-4">
+              {/* Form Content */}
+              <form onSubmit={handleSubmit(handleSave)} className="flex flex-col flex-grow space-y-6 overflow-y-auto pr-4 pl-4">
 
-              {/* Section: Personal Info */}
-              <div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-200">Personal Info</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block mb-1 text-sm">Full Name</label>
-                    <input {...register("name")} className="w-full p-2 rounded bg-[#121212] border border-gray-700" />
+                {/* Section: Personal Info */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-2 text-gray-200">Personal Info</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block mb-1 text-sm">Full Name</label>
+                      <input {...register("name")} className="w-full p-2 rounded bg-[#121212] border border-gray-700" />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 text-sm">Short Bio</label>
+                      <input {...register("short_bio")} className="w-full p-2 rounded bg-[#121212] border border-gray-700" />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 text-sm">Phone Number</label>
+                      <input {...register("phone")} className="w-full p-2 rounded bg-[#121212] border border-gray-700" />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 text-sm">Follower Count</label>
+                      <input
+                        {...register("followers")}
+                        className="w-full p-2 rounded bg-[#121212] border border-gray-700"
+                      />
+                      <p className="mt-1 text-xs text-red-500">
+                        ⚠️ Submitting a false follower count may lead to a permanent ban.
+                      </p>
+                    </div>
+
+
+                    <div>
+                      <label className="block mb-1 text-sm">Profile Image</label>
+
+                      {previewImage || existingImageUrl ? (
+                        <div className="relative w-32 h-32 mb-2">
+                          <img
+                            src={previewImage || existingImageUrl}
+                            alt="Profile preview"
+                            className="object-cover w-full h-full rounded border border-gray-600"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (previewImage) {
+                                URL.revokeObjectURL(previewImage)
+                              }
+                              setPreviewImage("")
+                              setProfileImageFile(null)
+                              setExistingImageUrl("")
+                            }}
+                            className="absolute top-1 right-1 bg-black bg-opacity-60 text-white rounded-full px-2"
+                            title="Remove"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label
+                          htmlFor="profile-image"
+                          className="block w-full p-4 text-center border border-dashed border-gray-600 rounded cursor-pointer bg-[#121212] text-gray-400"
+                        >
+                          Click to upload image
+                          <input
+                            id="profile-image"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files[0]
+                              if (file) {
+                                const previewUrl = URL.createObjectURL(file)
+                                setPreviewImage(previewUrl)
+                                setProfileImageFile(file)
+                                setExistingImageUrl("")
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block mb-1 text-sm">Short Bio</label>
-                    <input {...register("short_bio")} className="w-full p-2 rounded bg-[#121212] border border-gray-700" />
-                  </div>
+                {/* Section: About */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-2 text-gray-200">About</h3>
+                  <textarea
+                    {...register("bio")}
+                    rows={4}
+                    className="w-full p-2 rounded bg-[#121212] border border-gray-700"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block mb-1 text-sm">Phone Number</label>
-                    <input {...register("phone")} className="w-full p-2 rounded bg-[#121212] border border-gray-700" />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-sm">Profile Image</label>
-
-                    {previewImage || existingImageUrl ? (
-                      <div className="relative w-32 h-32 mb-2">
-                        <img
-                          src={previewImage || existingImageUrl}
-                          alt="Profile preview"
-                          className="object-cover w-full h-full rounded border border-gray-600"
+                {/* Section: Languages */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-2 text-gray-200">Languages (up to 10)</h3>
+                  <div className="space-y-2">
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="flex gap-2">
+                        <input
+                          {...register(`languages.${index}.value`)}
+                          className="flex-1 p-2 rounded bg-[#121212] border border-gray-700"
                         />
                         <button
                           type="button"
-                          onClick={() => {
-                            if (previewImage) {
-                              URL.revokeObjectURL(previewImage)
-                            }
-                            setPreviewImage("")
-                            setProfileImageFile(null)
-                            setExistingImageUrl("")
-                          }}
-                          className="absolute top-1 right-1 bg-black bg-opacity-60 text-white rounded-full px-2"
-                          title="Remove"
+                          onClick={() => remove(index)}
+                          className="text-red-400 text-4xl"
+                          disabled={fields.length === 1}
                         >
-                          ✕
+                          &times;
                         </button>
                       </div>
-                    ) : (
-                      <label
-                        htmlFor="profile-image"
-                        className="block w-full p-4 text-center border border-dashed border-gray-600 rounded cursor-pointer bg-[#121212] text-gray-400"
+                    ))}
+                    {fields.length < 10 && (
+                      <button
+                        type="button"
+                        onClick={() => append({ value: "" })}
+                        className="text-green-400 text-sm mt-2"
                       >
-                        Click to upload image
-                        <input
-                          id="profile-image"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files[0]
-                            if (file) {
-                              const previewUrl = URL.createObjectURL(file)
-                              setPreviewImage(previewUrl)
-                              setProfileImageFile(file)
-                              setExistingImageUrl("")
-                            }
-                          }}
-                        />
-                      </label>
+                        + Add another language
+                      </button>
                     )}
                   </div>
                 </div>
-              </div>
 
-              {/* Section: About */}
-              <div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-200">About</h3>
-                <textarea
-                  {...register("bio")}
-                  rows={4}
-                  className="w-full p-2 rounded bg-[#121212] border border-gray-700"
-                />
-              </div>
-
-              {/* Section: Languages */}
-              <div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-200">Languages (up to 10)</h3>
-                <div className="space-y-2">
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2">
-                      <input
-                        {...register(`languages.${index}.value`)}
-                        className="flex-1 p-2 rounded bg-[#121212] border border-gray-700"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="text-red-400 text-4xl"
-                        disabled={fields.length === 1}
-                      >
-                        &times;
-                      </button>
+                {/* Section: Social Links */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-2 text-gray-200">Social Links</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block mb-1 text-sm">Instagram Handle</label>
+                      <input {...register("instagram")} className="w-full p-2 rounded bg-[#121212] border border-gray-700" />
                     </div>
-                  ))}
-                  {fields.length < 10 && (
-                    <button
-                      type="button"
-                      onClick={() => append({ value: "" })}
-                      className="text-green-400 text-sm mt-2"
-                    >
-                      + Add another language
-                    </button>
-                  )}
-                </div>
-              </div>
 
-              {/* Section: Social Links */}
-              <div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-200">Social Links</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block mb-1 text-sm">Instagram Handle</label>
-                    <input {...register("instagram")} className="w-full p-2 rounded bg-[#121212] border border-gray-700" />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-sm">Website</label>
-                    <input {...register("website")} className="w-full p-2 rounded bg-[#121212] border border-gray-700" />
+                    <div>
+                      <label className="block mb-1 text-sm">Website</label>
+                      <input {...register("website")} className="w-full p-2 rounded bg-[#121212] border border-gray-700" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </form>
 
-            {/* Sticky Footer */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-700 mt-4 sticky bottom-0 bg-[#1e1e1e]">
-              <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" onClick={handleSubmit(handleSave)}>
-                Save
-              </Button>
-            </div>
-          </Dialog.Panel>
-        </div>
-      </Dialog>}
+              </form>
+
+              {/* Sticky Footer */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-700 mt-4 sticky bottom-0 bg-[#1e1e1e]">
+                <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" onClick={handleSubmit(handleSave)}>
+                  Save
+                </Button>
+              </div>
+            </Dialog.Panel>
+          </div>
+        </Dialog>}
     </MainLayout>
   )
 }

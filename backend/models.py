@@ -77,6 +77,18 @@ class JSONEncodedList(TypeDecorator):
             return []
         return json.loads(value)
 
+
+from datetime import datetime, timezone
+
+class ProductView(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    viewed_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))  # ✅ timezone-aware
+
+    product = db.relationship("Product", backref=db.backref("views", lazy=True))
+    # user = db.relationship("User", backref=db.backref("viewed_products", lazy=True))
+
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
@@ -189,6 +201,7 @@ class CreatorProfile(db.Model):
     youtube = db.Column(db.String(100), nullable=True)
     tiktok = db.Column(db.String(100), nullable=True)
     twitter = db.Column(db.String(100), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=True)
     
     # Stats (could be updated periodically)
     follower_count = db.Column(db.Integer, default=0)

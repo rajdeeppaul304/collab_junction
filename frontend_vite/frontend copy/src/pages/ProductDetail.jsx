@@ -7,11 +7,61 @@ import Button from "../components/ui/Button"
 import { useAuth } from "../context/AuthContext"
 import CreatorAPI from "../creatorApi"
 import BrandAPI from "../brandApi"
+import Cookies from "js-cookie";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
 
 import getImageUrl from "../utils/getImageUrl"
 
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
+
 const ProductDetail = () => {
   const { id } = useParams()
+  const hasTrackedView = useRef(false);
+
+
+    useEffect(() => {
+    if (hasTrackedView.current) return; // prevents duplicate calls
+    hasTrackedView.current = true;
+
+    const cookieKey = `viewed_product_${id}`;
+    const alreadyViewed = Cookies.get(cookieKey);
+
+    if (!alreadyViewed) {
+      CreatorAPI.post(`/products/${id}/view`)
+        .then(() => {
+          Cookies.set(cookieKey, "true", { expires: 1 / 96 }); // 15 minutes
+        })
+        .catch((err) => {
+          console.error("Error tracking view:", err);
+        });
+    }
+  }, [id]);
+
+
+
+  
   const navigate = useNavigate()
   const { isAuthenticated, userRole } = useAuth()
   const [product, setProduct] = useState(null)
@@ -28,6 +78,186 @@ const ProductDetail = () => {
   const [errorAnalytics, setErrorAnalytics] = useState(null)
   const [showInterestModal, setShowInterestModal] = useState(false)
   const [interestStep, setInterestStep] = useState(1)
+ const [filter, setFilter] = useState("today");
+
+
+
+const getFilteredData = () => {
+  if (!productAnalytics?.views) return [];
+  const views = productAnalytics.views;
+
+switch (filter) {
+    case "today": {
+      const today = new Date().toISOString().split("T")[0];
+      return views.filter((d) => d.timestamp.startsWith(today));
+    }
+    case "week": {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return views.filter((d) => new Date(d.timestamp) >= weekAgo);
+    }
+    case "month": {
+      const monthAgo = new Date();
+      monthAgo.setDate(monthAgo.getDate() - 30);
+      return views.filter((d) => new Date(d.timestamp) >= monthAgo);
+    }
+    case "year": {
+      const yearAgo = new Date();
+      yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+      const yearData = views.filter((d) => new Date(d.timestamp) >= yearAgo);
+      
+      // Group by month and sum the views
+      const monthlyData = {};
+      yearData.forEach((d) => {
+        const date = new Date(d.timestamp);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
+        const monthLabel = date.toLocaleDateString([], { month: "short", year: "numeric" });
+        
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = {
+            timestamp: monthKey,
+            monthLabel: monthLabel,
+            views: 0
+          };
+        }
+        monthlyData[monthKey].views += d.views;
+      });
+      
+      return Object.values(monthlyData).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+    }
+    default:
+      return views;
+  }
+};
+
+const filteredData = getFilteredData();
+
+const chartData = {
+  labels: filteredData.map((d) => {
+    if (filter === "today") {
+      return new Date(d.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } else if (filter === "year") {
+      return d.monthLabel; // Use the pre-formatted month label
+    } else {
+      return new Date(d.timestamp).toLocaleDateString();
+    }
+  }),
+  datasets: [
+    {
+      label: "Views",
+      data: filteredData.map((d) => d.views),
+      borderColor: "rgba(255, 193, 7, 1)",
+      backgroundColor: (context) => {
+        const ctx = context.chart.ctx;
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, "rgba(255, 193, 7, 0.4)");
+        gradient.addColorStop(0.6, "rgba(255, 193, 7, 0.1)");
+        gradient.addColorStop(1, "rgba(255, 193, 7, 0)");
+        return gradient;
+      },
+      borderWidth: 3,
+      pointBackgroundColor: "rgba(255, 193, 7, 1)",
+      pointBorderColor: "#ffffff",
+      pointBorderWidth: 3,
+      pointRadius: 6,
+      pointHoverRadius: 8,
+      pointHoverBackgroundColor: "rgba(255, 193, 7, 1)",
+      pointHoverBorderColor: "#ffffff",
+      pointHoverBorderWidth: 4,
+      fill: true,
+      tension: 0.4, // This creates the smooth polynomial curves
+      shadowOffsetX: 0,
+      shadowOffsetY: 4,
+      shadowBlur: 15,
+      shadowColor: "rgba(255, 193, 7, 0.3)",
+    },
+  ],
+};
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: {
+    intersect: false,
+    mode: 'index',
+  },
+  plugins: {
+    legend: { 
+      display: false 
+    },
+    tooltip: {
+      backgroundColor: "rgba(30, 30, 30, 0.95)",
+      titleColor: "#ffffff",
+      bodyColor: "#ffffff",
+      borderColor: "rgba(255, 193, 7, 0.8)",
+      borderWidth: 1,
+      cornerRadius: 12,
+      displayColors: false,
+      padding: 12,
+      titleFont: {
+        size: 14,
+        weight: 'bold'
+      },
+      bodyFont: {
+        size: 13
+      },
+      callbacks: {
+        title: function(context) {
+          return `${context[0].label}`;
+        },
+        label: function(context) {
+          return `Views: ${context.parsed.y.toLocaleString()}`;
+        }
+      }
+    },
+  },
+  scales: {
+    x: {
+      grid: { 
+        display: true,
+        color: "rgba(255, 255, 255, 0.08)",
+        lineWidth: 1,
+      },
+      ticks: { 
+        color: "#a0a0a0",
+        font: {
+          size: 12,
+          weight: '500'
+        },
+        maxTicksLimit: 8,
+      },
+      border: {
+        display: false
+      }
+    },
+    y: {
+      grid: { 
+        display: true,
+        color: "rgba(255, 255, 255, 0.08)",
+        lineWidth: 1,
+      },
+      ticks: { 
+        color: "#a0a0a0",
+        font: {
+          size: 12,
+          weight: '500'
+        },
+        callback: function(value) {
+          return value.toLocaleString();
+        }
+      },
+      border: {
+        display: false
+      }
+    },
+  },
+  elements: {
+    point: {
+      hoverBorderWidth: 4,
+    }
+  }
+};
+
 const [step1Data, setStep1Data] = useState({
   selectedOptions: {}
 });
@@ -35,6 +265,7 @@ const [step1Data, setStep1Data] = useState({
     note: "",
     address: "",
   })
+
 
   const [submittingInterest, setSubmittingInterest] = useState(false)
 
@@ -51,6 +282,7 @@ const [step1Data, setStep1Data] = useState({
     const fetchAnalytics = async () => {
       try {
         const res = await BrandAPI.get(`/products/${id}/analytics`)
+        
         setProductAnalytics(res.data)
       } catch (err) {
         setErrorAnalytics("Failed to load analytics")
@@ -435,25 +667,124 @@ const areAllOptionsSelected = () => {
           </div>
         )} */}
 {userRole === "BRAND" && (
-  <div className="mt-12">
-    <h2 className="text-2xl font-bold mb-6 text-white">Product Analytics</h2>
-
-    {loadingAnalytics ? (
-      <p className="text-gray-400">Loading analytics...</p>
-    ) : errorAnalytics ? (
-      <p className="text-red-400">{errorAnalytics}</p>
-    ) : productAnalytics ? (
-      <div className="flex justify-start flex-wrap gap-6">
-        <div className="w-[200px] p-4 bg-[#242424] rounded-lg shadow text-white">
-          <p className="text-sm text-white">Interest Count</p>
-          <p className="text-xl font-semibold">{productAnalytics.interestCount}</p>
-        </div>
-        
-      </div>
-    ) : (
-      <p className="text-gray-400">No analytics data available.</p>
-    )}
+        <div className="mt-12">
+  <div className="flex items-center justify-between mb-8">
+    <h2 className="text-3xl font-bold text-white flex items-center">
+      <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">
+        Product Analytics
+      </span>
+      <div className="ml-4 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+    </h2>
   </div>
+
+  {loadingAnalytics ? (
+    <div className="flex items-center justify-center py-12">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
+      <p className="text-gray-400 ml-4">Loading analytics...</p>
+    </div>
+  ) : errorAnalytics ? (
+    <div className="p-6 bg-red-500/10 border border-red-500/20 rounded-2xl">
+      <p className="text-red-400">{errorAnalytics}</p>
+    </div>
+  ) : productAnalytics ? (
+    <div className="space-y-8">
+      {/* Interest Count Card */}
+      <div className="flex justify-start">
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+          <div className="relative w-64 p-8 bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] rounded-3xl shadow-xl border border-white/5 hover:scale-105 transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                </svg>
+              </div>
+              <div className="text-xs px-3 py-1 bg-yellow-400/20 text-yellow-400 rounded-full font-semibold">
+                LIVE
+              </div>
+            </div>
+            <p className="text-sm uppercase tracking-wider text-gray-400 font-semibold mb-2">
+              Total Interest
+            </p>
+            <p className="text-5xl font-black bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent mb-2">
+              {productAnalytics.interestCount?.toLocaleString() || '0'}
+            </p>
+            <p className="text-xs text-gray-500">
+              Lifetime engagement
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter Buttons */}
+      <div className="flex flex-wrap gap-3">
+        {["today", "week", "month", "year"].map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              filter === f
+                ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-lg shadow-yellow-400/25 scale-105"
+                : "bg-[#2d2d2d] text-gray-300 hover:bg-[#3a3a3a] hover:text-white border border-white/10 hover:border-white/20"
+            }`}
+          >
+            {f === "today" && "📅"}
+            {f === "week" && "📊"}
+            {f === "month" && "📈"}
+            {f === "year" && "🎯"}
+            <span className="ml-2">
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Chart Container */}
+      <div className="relative group">
+        <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400/20 via-amber-500/20 to-yellow-400/20 rounded-3xl blur-sm opacity-0 group-hover:opacity-100 transition duration-500"></div>
+        <div className="relative p-8 bg-gradient-to-br from-[#1f1f1f] via-[#1a1a1a] to-[#151515] rounded-3xl shadow-2xl border border-white/5 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-white flex items-center">
+              <span className="w-3 h-3 bg-yellow-400 rounded-full mr-3 animate-pulse"></span>
+              Views Analytics
+            </h3>
+            <div className="text-sm text-gray-400 bg-white/5 px-3 py-1 rounded-full">
+              {filteredData.length} data points
+            </div>
+          </div>
+          
+          {filteredData.length > 0 ? (
+            <div className="h-80 relative">
+              <Line data={chartData} options={chartOptions} />
+            </div>
+          ) : (
+            <div className="h-80 flex flex-col items-center justify-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <p className="text-gray-400 text-lg mb-2">No chart data available</p>
+              <p className="text-gray-500 text-sm">Try selecting a different time period</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="p-8 bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] rounded-3xl border border-white/5 text-center">
+      <div className="w-16 h-16 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+        </svg>
+      </div>
+      <p className="text-gray-400 text-lg">No analytics data available</p>
+      <p className="text-gray-500 text-sm mt-2">Data will appear here once tracking begins</p>
+    </div>
+  )}
+</div>
+
 )}
 
 
@@ -502,7 +833,7 @@ const areAllOptionsSelected = () => {
 
                 {product.options.map((option, index) => (
                   <div key={index} className="bg-[#2B2B2B] rounded-xl p-4 border border-gray-200">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3 capitalize">
+                    <label className="block text-sm font-semibold text-white mb-3 capitalize">
                       {option.name || `Option ${index + 1}`}
                       <span className="text-red-500 ml-1">*</span>
                     </label>

@@ -4,7 +4,8 @@ from utils.email import send_verification_email
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import uuid, json, os
-from models import db, User, Product, CreatorInterest, Offer, OfferStatus, CreatorProfile
+from models import db, User, Product, CreatorInterest, Offer, OfferStatus, CreatorProfile, ProductView
+from datetime import datetime, timezone
 
 from flask import Blueprint, request, jsonify, make_response
 from models import db, User, UserRole
@@ -183,7 +184,8 @@ def get_creator_profile():
             "twitter": profile.twitter,
             "website": profile.portfolio_url
         },
-        "phone": getattr(profile, "phone", None),
+        "phone": profile.phone_number,
+        "followers": profile.follower_count,
         "avatar": profile.avatar_url
     })
 
@@ -253,7 +255,9 @@ def update_creator_profile():
     if 'short_bio' in data:
         profile.short_bio = data['short_bio']
     if 'phone' in data:
-        profile.phone = data['phone']
+        profile.phone_number = data['phone']
+    if 'followers' in data:
+        profile.follower_count = data['followers']
 
     # Update languages
     if 'languages' in data:
@@ -282,7 +286,8 @@ def update_creator_profile():
             "name": profile.display_name,
             "short_bio": profile.short_bio,
             "bio": profile.bio,
-            "phone": getattr(profile, "phone", None),
+            "phone": profile.phone_number,
+            "followers": profile.follower_count,
             "languages": profile.languages_spoken,
             "avatar_url": profile.avatar_url,
             "social": {
@@ -680,6 +685,9 @@ def express_product_interest(product_id):
 
 
 
+
+
+
 @creator.route("/products/<int:product_id>/interest", methods=["DELETE"])
 @jwt_required()
 def remove_product_interest(product_id):
@@ -708,6 +716,28 @@ def remove_product_interest(product_id):
         db.session.rollback()
         print(f"Error removing product interest: {e}")
         return jsonify({"error": "Failed to remove interest"}), 500
+
+
+@creator.route("/products/<int:product_id>/view", methods=["POST"])
+@jwt_required()
+def track_view(product_id):
+    print("view called")
+    # Step 1: Get the product or 404
+    product = Product.query.get_or_404(product_id)
+
+    # Step 3: Create a new view log
+    view = ProductView(
+        product_id=product.id,
+        viewed_at=datetime.now(timezone.utc),
+    )
+
+    # Step 4: Save to database
+    db.session.add(view)
+    db.session.commit()
+
+    return jsonify({"message": "View recorded"}), 201
+
+
 
 
 @creator.route("/products/<int:product_id>/related", methods=["GET"])
