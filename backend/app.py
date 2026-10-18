@@ -62,6 +62,14 @@ def create_app():
     )
 
     # -------------------
+    # Cloudinary Image Storage
+    # -------------------
+    app.config['CLOUDINARY_CLOUD_NAME'] = os.getenv('CLOUDINARY_CLOUD_NAME')
+    app.config['CLOUDINARY_API_KEY'] = os.getenv('CLOUDINARY_API_KEY')
+    app.config['CLOUDINARY_API_SECRET'] = os.getenv('CLOUDINARY_API_SECRET')
+    app.config['CLOUDINARY_URL'] = os.getenv('CLOUDINARY_URL')
+
+    # -------------------
     # Frontend URL (used for redirects/links, e.g. verification emails, OAuth)
     # -------------------
     app.config['FRONTEND_URL'] = os.getenv('FRONTEND_URL', 'http://localhost:5173')

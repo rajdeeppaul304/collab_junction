@@ -234,15 +234,13 @@ def update_creator_profile():
 
     # Handle avatar image upload
     image = files.get("image")
-    if image and image.filename:
+    if image and getattr(image, "filename", ""):
         allowed_extensions = {'png', 'jpg', 'jpeg', 'gif','avif'}
         if '.' in image.filename and image.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
-            filename = f"{uuid.uuid4().hex}_{secure_filename(image.filename)}"
-            upload_dir = "static/avatars"
-            os.makedirs(upload_dir, exist_ok=True)
-            path = os.path.join(upload_dir, filename)
-            image.save(path)
-            profile.avatar_url = f"/static/avatars/{filename}"
+            from utils.uploader import upload_image
+            avatar_url = upload_image(image, folder="collab_junction/creators", fallback_local_dir="static/avatars")
+            if avatar_url:
+                profile.avatar_url = avatar_url
         else:
             return jsonify({"error": "Invalid file type. Only PNG, JPG, JPEG, GIF, and AVIF are allowed."}), 400
 

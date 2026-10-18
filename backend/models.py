@@ -109,7 +109,7 @@ class Product(db.Model):
 
 class ProductImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    image_url = db.Column(db.String(255), nullable=False)
+    image_url = db.Column(db.String(500), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
 
 
@@ -161,7 +161,7 @@ class BrandProfile(db.Model):
     sales_per_month = db.Column(db.String(20), nullable=True)
     product_count = db.Column(db.Integer, nullable=True)
     description = db.Column(db.Text, nullable=True)
-    logo_url = db.Column(db.String(255), nullable=True)
+    logo_url = db.Column(db.String(500), nullable=True)
 
     instagram = db.Column(db.String(255), nullable=True)
     instagram_handle = db.Column(db.String(100), nullable=True)
@@ -178,13 +178,14 @@ class BrandProfile(db.Model):
 
     user = db.relationship('User', backref=db.backref('brand_profile', uselist=False))
 
+
 class CreatorProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True, nullable=False)
     
     # Creator-specific information
     display_name = db.Column(db.String(120), nullable=False)
-    avatar_url = db.Column(db.String(255), nullable=True)  # URL/path to profile image
+    avatar_url = db.Column(db.String(500), nullable=True)  # URL/path to profile image
     short_bio = db.Column(db.String(255), nullable=True)   # Brief summary
     bio = db.Column(db.Text, nullable=True)
     location = db.Column(db.String(100), nullable=True)

@@ -146,11 +146,11 @@ def update_brand_info():
 
     # Handle image upload
     image = files.get("image")
-    if image:
-        filename = f"{uuid.uuid4().hex}_{secure_filename(image.filename)}"
-        path = os.path.join("static", filename)
-        image.save(path)
-        brand_profile.logo_url = f"/static/{filename}"
+    if image and getattr(image, "filename", ""):
+        from utils.uploader import upload_image
+        logo_url = upload_image(image, folder="collab_junction/brands", fallback_local_dir="static")
+        if logo_url:
+            brand_profile.logo_url = logo_url
 
     # Handle image removal
     if data.get("image_deleted") == "true":
@@ -222,17 +222,16 @@ def add_product():
             print(f"  - {option['name']}: {', '.join(option['values'])}")
 
         # Save images
+        from utils.uploader import upload_image
         image_paths = []
         for img in images:
-            if img.filename == '':
+            if not img or getattr(img, "filename", "") == '':
                 continue
                 
-            filename = secure_filename(img.filename)
-            save_path = os.path.join("static", "uploads", filename)
-            img.save(save_path)
-            url_path = f"/static/uploads/{filename}"
-            db.session.add(ProductImage(image_url=url_path, product_id=product.id))
-            image_paths.append(url_path)
+            url_path = upload_image(img, folder="collab_junction/products", fallback_local_dir="static/uploads")
+            if url_path:
+                db.session.add(ProductImage(image_url=url_path, product_id=product.id))
+                image_paths.append(url_path)
 
         db.session.commit()
 
@@ -329,18 +328,17 @@ def edit_product(product_id):
                 print(f"Deleted image record: {url}")
 
         # Append new images
+        from utils.uploader import upload_image
         new_image_paths = []
         for img in images:
-            if img.filename == '':
+            if not img or getattr(img, "filename", "") == '':
                 continue
                 
-            filename = secure_filename(img.filename)
-            save_path = os.path.join("static", "uploads", filename)
-            img.save(save_path)
-            url_path = f"/static/uploads/{filename}"
-            db.session.add(ProductImage(image_url=url_path, product_id=product.id))
-            new_image_paths.append(url_path)
-            print(f"Added new image: {url_path}")
+            url_path = upload_image(img, folder="collab_junction/products", fallback_local_dir="static/uploads")
+            if url_path:
+                db.session.add(ProductImage(image_url=url_path, product_id=product.id))
+                new_image_paths.append(url_path)
+                print(f"Added new image: {url_path}")
 
         db.session.commit()
 

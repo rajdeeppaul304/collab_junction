@@ -43,7 +43,11 @@ class Config:
     RESEND_API_KEY = os.getenv("RESEND_API_KEY")
     RESEND_FROM = os.getenv("RESEND_FROM", "Collab Junction <onboarding@resend.dev>")
 
-    MAIL_SUPPRESS_SEND = not bool(BREVO_API_KEY or RESEND_API_KEY or (MAIL_USERNAME and MAIL_PASSWORD))
+    # Cloudinary Image Storage (Permanent CDN image uploads)
+    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
+    CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
 
     # Frontend
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
