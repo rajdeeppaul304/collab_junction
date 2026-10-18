@@ -14,6 +14,32 @@ from models import db, User, UserRole, AuthProvider, NotRoleOAuth
 auth = Blueprint('auth', __name__)
 tokens = {}  # In-memory verification token store — use DB in production
 
+
+@auth.route("/contact", methods=["POST"])
+def contact():
+    """Receive messages from the public Contact page.
+
+    There's no dedicated support-ticket system yet, so for now we just
+    validate the payload and log it. This at least makes the Contact form
+    on the frontend work instead of always failing with a 404.
+    """
+    data = request.get_json() or {}
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip()
+    subject = (data.get("subject") or "").strip()
+    message = (data.get("message") or "").strip()
+
+    if not all([name, email, subject, message]):
+        return jsonify({"msg": "All fields are required"}), 400
+
+    if "@" not in email:
+        return jsonify({"msg": "Please provide a valid email address"}), 400
+
+    print(f"[Contact] {name} <{email}> — {subject}: {message}")
+
+    return jsonify({"msg": "Thanks for reaching out! We'll get back to you soon."}), 201
+
+
 @auth.route("/auth/signup", methods=["POST"])
 def signup():
     data = request.get_json()
@@ -123,7 +149,6 @@ def signin():
 @auth.route("/auth/me", methods=["GET"])
 @jwt_required()
 def get_current_user():
-    print("error here")
     identity = int(get_jwt_identity())
     user = User.query.get(identity)
 
@@ -157,32 +182,51 @@ def set_role():
     if existing_user:
         return jsonify({"msg": "User already exists."}), 400
 
-    # Create new user
+    # Create new user. OAuth users have no password of their own, so we store
+    # an unusable random hash (the `password` column is NOT NULL, and this
+    # value can never match a real login attempt via check_password_hash).
     user = User(
         email=oauth_user.email,
-        password=None,
+        password=generate_password_hash(uuid.uuid4().hex),
         username=oauth_user.username,
+        name=oauth_user.username,
         github_id=oauth_user.github_id,
         is_verified=True,
         profile_image=oauth_user.avatar,
-        user_role=user_role,
+        user_role=UserRole(user_role),
         auth_provider=AuthProvider.GITHUB
     )
     db.session.add(user)
+    db.session.flush()
+
+    # Create the matching profile row, same as email signup does
+    if user.user_role == UserRole.CREATOR:
+        db.session.add(CreatorProfile(user_id=user.id, display_name=user.name or user.username))
+    elif user.user_role == UserRole.BRAND:
+        db.session.add(BrandProfile(user_id=user.id, brand_name=user.name or user.username))
+
     db.session.delete(oauth_user)
     db.session.commit()
 
-    # ✅ Generate JWT token like in signin
-    # token = create_access_token(identity={"email": user.email, "role": user.user_role.name})
+    # Generate JWT token the same way signin() does, so /auth/me works consistently
     token = create_access_token(
-    identity=user.email,  # ✅ email is already a string
-    additional_claims={
-        "role": user.user_role.name
-    }
-)
+        identity=str(user.id),
+        additional_claims={
+            "email": user.email,
+            "role": user.user_role.name
+        }
+    )
 
-
-    return jsonify({"msg": "User created and signed in.", "token": token})
+    return jsonify({
+        "msg": "User created and signed in.",
+        "token": token,
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "role": user.user_role.name
+        }
+    })
 
 
 from flask import Blueprint, jsonify, redirect, url_for
@@ -193,13 +237,18 @@ from models import User, UserRole
 
 @auth.route('/login/github')
 def github_login():
+    if not hasattr(oauth, "github"):
+        return jsonify({"msg": "GitHub sign-in is not configured on this server."}), 503
     redirect_uri = url_for('auth.github_callback', _external=True)
     return oauth.github.authorize_redirect(redirect_uri)
 
 from flask import redirect, url_for
+import os
 
 @auth.route('/login/callback')
 def github_callback():
+    if not hasattr(oauth, "github"):
+        return jsonify({"msg": "GitHub sign-in is not configured on this server."}), 503
     token = oauth.github.authorize_access_token()
     github_user = oauth.github.get('user').json()
 
@@ -224,5 +273,6 @@ def github_callback():
         db.session.commit()
 
     # Redirect user to the frontend /set-role page with the github_id as a query parameter
-    return redirect("http://localhost:3000/set-role?github_id=" + github_id)
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    return redirect(f"{frontend_url}/set-role?github_id={github_id}")
 

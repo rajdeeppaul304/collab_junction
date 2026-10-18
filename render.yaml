@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: collab-junction-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: FRONTEND_URL
+        sync: false
+      - key: SQLALCHEMY_DATABASE_URI
+        fromDatabase:
+          name: collab-junction-db
+          property: connectionString
+
+databases:
+  - name: collab-junction-db
+    databaseName: collabjunction
+    user: collabjunction
+    plan: free

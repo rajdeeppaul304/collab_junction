@@ -42,26 +42,34 @@ def get_product_analytics(product_id):
     # 1. Interest count
     interest_count = CreatorInterest.query.filter_by(product_id=product_id).count()
 
-    # 2. Views grouped by exact hour (optional: change to 'minute' or remove truncation for full timestamps)
+    # 2. Views grouped by hour (cross-dialect: strftime for SQLite, date_trunc for PostgreSQL)
+    is_sqlite = db.engine.dialect.name == "sqlite"
+    trunc_func = (
+        func.strftime('%Y-%m-%d %H:00:00', ProductView.viewed_at)
+        if is_sqlite
+        else func.date_trunc('hour', ProductView.viewed_at)
+    )
+
     view_data = (
         db.session.query(
-            func.date_trunc('hour', ProductView.viewed_at).label('timestamp'),
+            trunc_func.label('timestamp'),
             func.count().label('views')
         )
         .filter(ProductView.product_id == product_id)
-        .group_by(func.date_trunc('hour', ProductView.viewed_at))
-        .order_by(func.date_trunc('hour', ProductView.viewed_at))
+        .group_by(trunc_func)
+        .order_by(trunc_func)
         .all()
     )
 
     # 3. Convert to JSON-friendly format
-    views = [
-        {
-            "timestamp": ts.isoformat(),  # includes date and time, ISO 8601 format
-            "views": count
-        }
-        for ts, count in view_data
-    ]
+    views = []
+    for ts, count in view_data:
+        if ts is not None:
+            ts_str = ts.isoformat() if hasattr(ts, 'isoformat') else str(ts)
+            views.append({
+                "timestamp": ts_str,
+                "views": count
+            })
 
     return jsonify({
         "interestCount": interest_count,
@@ -595,15 +603,13 @@ def update_product_status(product_id):
     }), 200
 
 @brand.route("/products/<int:product_id>", methods=["GET"])
-@jwt_required(optional=True)
+@jwt_required()
 def get_product_detail(product_id):
     current_user_id = int(get_jwt_identity())
     product = Product.query.filter_by(id=product_id, brand_id=current_user_id).first()
-    print(product.options)
     if not product:
         return jsonify({"msg": "Product not found"}), 404
 
-    # print(product)
     return jsonify({
         "id": product.id,
         "name": product.name,

@@ -69,7 +69,6 @@ def get_products():
 
 
 @creator.route("/products/categories", methods=["GET"])
-@jwt_required()
 def get_creator_product_categories():
     # Get distinct categories from products
     categories = db.session.query(Product.category.distinct()).filter(Product.status == "active").all()
@@ -336,56 +335,47 @@ def get_creator_collaborations():
 
 
 @creator.route("/products/brands", methods=["GET"])
-@jwt_required()
 def get_product_brands():
-    """Get distinct brands from products"""
+    """Get distinct brand (company) names from active products"""
     try:
-        # Assuming you have a Brand model or brand field in Product
-        brands = db.session.query(Product.brand.distinct()).filter(Product.status == "active").all()
-        brand_names = [brand[0] for brand in brands if brand[0]]
+        brands = (
+            db.session.query(User.name)
+            .join(Product, Product.brand_id == User.id)
+            .filter(Product.status == "active")
+            .distinct()
+            .all()
+        )
+        brand_names = [b[0] for b in brands if b[0]]
         return jsonify(brand_names)
     except Exception as e:
         print(f"Error fetching brands: {e}")
-        # Return some default brands if query fails
-        return jsonify(["Sony", "Canon", "Nikon", "Apple", "Samsung", "DJI", "GoPro"])
+        return jsonify([])
 
 
+# Note: the Product model has no `color` or `product_type` columns yet, so
+# these endpoints return an empty list rather than guessing/crashing. The
+# frontend already treats an empty options list as "no filter available".
 @creator.route("/products/colors", methods=["GET"])
-@jwt_required()
 def get_product_colors():
-    """Get distinct colors from products"""
-    try:
-        # If you have a color field in your Product model
-        colors = db.session.query(Product.color.distinct()).filter(Product.status == "active").all()
-        color_names = [color[0] for color in colors if color[0]]
-        return jsonify(color_names)
-    except Exception as e:
-        print(f"Error fetching colors: {e}")
-        # Return some default colors if query fails
-        return jsonify(["Black", "White", "Silver", "Gold", "Blue", "Red", "Green"])
+    """Get distinct colors from products (not tracked on the Product model yet)"""
+    return jsonify([])
 
 
 @creator.route("/products/types", methods=["GET"])
-@jwt_required()
 def get_product_types():
-    """Get distinct product types"""
-    try:
-        # If you have a product_type field in your Product model
-        types = db.session.query(Product.product_type.distinct()).filter(Product.status == "active").all()
-        type_names = [ptype[0] for ptype in types if ptype[0]]
-        return jsonify(type_names)
-    except Exception as e:
-        print(f"Error fetching types: {e}")
-        # Return some default types if query fails
-        return jsonify(["Camera", "Lens", "Accessory", "Drone", "Audio", "Lighting", "Tripod"])
+    """Get distinct product types (not tracked on the Product model yet)"""
+    return jsonify([])
 
 
 # Updated products route with better filtering
 @creator.route("/products", methods=["GET"])
-@jwt_required()
+@jwt_required(optional=True)
 def get_creator_products():
-    current_user_id = int(get_jwt_identity())
-    
+    # The store/catalog is meant to be browsable by anyone, so the JWT is
+    # optional here - we just don't personalize anything if there's no user.
+    identity = get_jwt_identity()
+    current_user_id = int(identity) if identity else None
+
     # Get query parameters
     category = request.args.get("category")
     brand = request.args.get("brand")
@@ -393,6 +383,7 @@ def get_creator_products():
     product_type = request.args.get("type")
     price_range = request.args.get("price")
     search = request.args.get("search", "").lower()
+    limit = request.args.get("limit", type=int)
 
     # Base query
     products_query = Product.query.filter(Product.status == "active")
@@ -400,24 +391,17 @@ def get_creator_products():
     # Apply filters
     if category and category != "all":
         products_query = products_query.filter(Product.category.ilike(f"%{category}%"))
-    
+
     if brand and brand != "all":
-        products_query = products_query.filter(Product.brand.ilike(f"%{brand}%"))
-    
-    if color and color != "all":
-        # Assuming you have a color field
-        try:
-            products_query = products_query.filter(Product.color.ilike(f"%{color}%"))
-        except AttributeError:
-            pass  # If color field doesn't exist, skip this filter
-    
-    if product_type and product_type != "all":
-        # Assuming you have a product_type field
-        try:
-            products_query = products_query.filter(Product.product_type.ilike(f"%{product_type}%"))
-        except AttributeError:
-            pass  # If product_type field doesn't exist, skip this filter
-    
+        # brand is a relationship to User, so filter on the related name
+        products_query = products_query.join(User, Product.brand_id == User.id).filter(
+            User.name.ilike(f"%{brand}%")
+        )
+
+    # Color / product type are not tracked on the Product model yet, so those
+    # filters are accepted but intentionally not applied (rather than
+    # crashing on a nonexistent column).
+
     if price_range and price_range != "all":
         if price_range == "Under 10k":
             products_query = products_query.filter(Product.price < 10000)
@@ -432,9 +416,14 @@ def get_creator_products():
         products_query = products_query.filter(
             db.or_(
                 Product.name.ilike(f"%{search}%"),
-                Product.description.ilike(f"%{search}%") if hasattr(Product, 'description') else Product.name.ilike(f"%{search}%")
+                Product.description.ilike(f"%{search}%")
             )
         )
+
+    products_query = products_query.order_by(Product.created_at.desc())
+
+    if limit:
+        products_query = products_query.limit(limit)
 
     # Get products with their first image
     products = []
@@ -465,7 +454,6 @@ def get_creator_products():
 
 # Updated popular products with real data
 @creator.route("/products/popular", methods=["GET"])
-@jwt_required()
 def get_popular_products():
     """Get popular products based on offer count or other metrics"""
     try:
@@ -524,7 +512,6 @@ def get_popular_products():
 
 
 @creator.route("/products/<int:product_id>", methods=["GET"])
-@jwt_required()
 def get_product_detail(product_id):
     """Get detailed information about a specific product"""
     try:
@@ -719,7 +706,6 @@ def remove_product_interest(product_id):
 
 
 @creator.route("/products/<int:product_id>/view", methods=["POST"])
-@jwt_required()
 def track_view(product_id):
     print("view called")
     # Step 1: Get the product or 404
@@ -741,7 +727,6 @@ def track_view(product_id):
 
 
 @creator.route("/products/<int:product_id>/related", methods=["GET"])
-@jwt_required()
 def get_related_products(product_id):
     """Get products related to the current product (same category)"""
     try:
