@@ -5,6 +5,7 @@ flask_sqlalchemy
 flask_jwt_extended
 authlib
 requests
-psycopg2-binary 
-dotenv
+psycopg[binary]
+psycopg2-binary
+python-dotenv
 gunicorn

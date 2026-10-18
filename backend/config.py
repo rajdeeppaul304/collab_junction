@@ -7,10 +7,13 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
     
-    # Database
-    db_uri = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///users.db")
-    if db_uri and db_uri.startswith("postgres://"):
-        db_uri = db_uri.replace("postgres://", "postgresql://", 1)
+    # Database - Handle Render postgres://, DATABASE_URL, and ensure compatibility with SQLAlchemy 2.x
+    db_uri = os.getenv("SQLALCHEMY_DATABASE_URI") or os.getenv("DATABASE_URL") or "sqlite:///users.db"
+    if db_uri:
+        if db_uri.startswith("postgres://"):
+            db_uri = db_uri.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif db_uri.startswith("postgresql://") and not db_uri.startswith("postgresql+"):
+            db_uri = db_uri.replace("postgresql://", "postgresql+psycopg2://", 1)
     SQLALCHEMY_DATABASE_URI = db_uri
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
