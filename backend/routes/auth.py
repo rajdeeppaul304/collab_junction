@@ -82,9 +82,10 @@ def signup():
             brand_profile = BrandProfile(user_id=user.id, brand_name=name)
             db.session.add(brand_profile)
 
-    # Check if mail service is configured (either Resend HTTP or SMTP)
+    # Check if mail service is configured (Brevo HTTP, Resend HTTP, or SMTP)
     mail_configured = bool(
-        current_app.config.get("RESEND_API_KEY")
+        current_app.config.get("BREVO_API_KEY")
+        or current_app.config.get("RESEND_API_KEY")
         or (current_app.config.get("MAIL_USERNAME") and current_app.config.get("MAIL_PASSWORD"))
     )
 

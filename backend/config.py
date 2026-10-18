@@ -34,11 +34,16 @@ class Config:
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER") or os.getenv("MAIL_USERNAME")
 
-    # Resend HTTP Email API (Recommended for Render & cloud deployment)
+    # Brevo HTTP Email API (Recommended for sending to any email on free tier)
+    BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+    BREVO_SENDER_EMAIL = os.getenv("BREVO_SENDER_EMAIL")
+    BREVO_SENDER_NAME = os.getenv("BREVO_SENDER_NAME", "Collab Junction")
+
+    # Resend HTTP Email API
     RESEND_API_KEY = os.getenv("RESEND_API_KEY")
     RESEND_FROM = os.getenv("RESEND_FROM", "Collab Junction <onboarding@resend.dev>")
 
-    MAIL_SUPPRESS_SEND = not bool(RESEND_API_KEY or (MAIL_USERNAME and MAIL_PASSWORD))
+    MAIL_SUPPRESS_SEND = not bool(BREVO_API_KEY or RESEND_API_KEY or (MAIL_USERNAME and MAIL_PASSWORD))
 
     # Frontend
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")

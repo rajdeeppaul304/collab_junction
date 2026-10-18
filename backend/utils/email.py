@@ -8,6 +8,29 @@ from extensions import mail
 from flask import current_app
 
 
+def _send_brevo_email(api_key, sender_email, sender_name, to_email, subject, html_content, text_content):
+    """Send email via Brevo's HTTP API (port 443 - works everywhere, free to any recipient)."""
+    response = requests.post(
+        "https://api.brevo.com/v3/smtp/email",
+        headers={
+            "api-key": api_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        json={
+            "sender": {"name": sender_name, "email": sender_email},
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "htmlContent": html_content,
+            "textContent": text_content,
+        },
+        timeout=10,
+    )
+    if not response.ok:
+        raise RuntimeError(f"Brevo HTTP API failed with status {response.status_code}: {response.text}")
+    return response.json()
+
+
 def _send_resend_email(api_key, from_email, to_email, subject, html_content, text_content):
     """Send email via Resend's HTTP API (port 443 - never blocked by cloud firewalls)."""
     response = requests.post(
@@ -51,6 +74,19 @@ def _send_async_email(app, to_email, verify_link):
         </div>
         """
 
+        # 1. Try Brevo API first (Recommended for arbitrary recipients without custom domain)
+        brevo_api_key = app.config.get("BREVO_API_KEY")
+        if brevo_api_key:
+            try:
+                sender_email = app.config.get("BREVO_SENDER_EMAIL") or app.config.get("MAIL_USERNAME") or to_email
+                sender_name = app.config.get("BREVO_SENDER_NAME", "Collab Junction")
+                _send_brevo_email(brevo_api_key, sender_email, sender_name, to_email, subject, html_content, text_content)
+                app.logger.info(f"Verification email sent via Brevo API to {to_email}")
+                return
+            except Exception as exc:
+                app.logger.warning(f"Brevo API email failed for {to_email}: {exc}")
+
+        # 2. Try Resend API
         resend_api_key = app.config.get("RESEND_API_KEY")
         if resend_api_key:
             try:
@@ -87,10 +123,11 @@ def send_verification_email(email, token):
     frontend_url = current_app.config.get("FRONTEND_URL") or os.getenv("FRONTEND_URL", "http://localhost:5173")
     verify_link = f"{frontend_url}/verify/{token}"
 
+    brevo_configured = bool(current_app.config.get("BREVO_API_KEY"))
     resend_configured = bool(current_app.config.get("RESEND_API_KEY"))
     smtp_configured = bool(current_app.config.get("MAIL_USERNAME") and current_app.config.get("MAIL_PASSWORD"))
 
-    if not resend_configured and not smtp_configured:
+    if not brevo_configured and not resend_configured and not smtp_configured:
         current_app.logger.info(f"[MAIL_NOT_CONFIGURED] Verification link for {email}: {verify_link}")
         return verify_link
 
