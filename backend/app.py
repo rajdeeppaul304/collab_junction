@@ -159,6 +159,10 @@ with app.app_context():
         db.create_all()
     except Exception as e:
         print("db.create_all note:", e)
+    finally:
+        # Crucial for Gunicorn: close master process connection before worker fork
+        # to prevent 'SSL error: decryption failed or bad record mac'
+        db.engine.dispose()
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))

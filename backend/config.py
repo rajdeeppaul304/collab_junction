@@ -16,6 +16,10 @@ class Config:
             db_uri = db_uri.replace("postgresql://", "postgresql+psycopg2://", 1)
     SQLALCHEMY_DATABASE_URI = db_uri
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+    }
 
     # JWT
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret-key-change-me")
@@ -25,9 +29,11 @@ class Config:
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
     MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True") == "True"
+    MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "False") == "True"
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER") or os.getenv("MAIL_USERNAME")
+    MAIL_SUPPRESS_SEND = not bool(MAIL_USERNAME and MAIL_PASSWORD)
 
     # Frontend
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")

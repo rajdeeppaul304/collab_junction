@@ -1,13 +1,9 @@
-from flask import Blueprint, request, jsonify
-from models import db, User, UserRole, CreatorProfile, BrandProfile
+from flask import Blueprint, request, jsonify, make_response, current_app
+from models import db, User, UserRole, CreatorProfile, BrandProfile, AuthProvider, NotRoleOAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 from utils.email import send_verification_email
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import uuid
-
-
-from flask import Blueprint, request, jsonify, make_response
-from models import db, User, UserRole, AuthProvider, NotRoleOAuth
 
 
 
@@ -51,36 +47,58 @@ def signup():
     if not all([name, email, password, role]):
         return jsonify({"msg": "All fields are required"}), 400
 
-    if User.query.filter_by(email=email).first():
-        return jsonify({"msg": "Email already registered"}), 400
-
     try:
         user_role = UserRole(role)
     except ValueError:
         return jsonify({"msg": "Invalid user role"}), 400
 
-    hashed_password = generate_password_hash(password)
-    user = User(
-        name=name,
-        email=email,
-        password=hashed_password,
-        user_role=user_role,
-        is_verified=False
-    )
-    db.session.add(user)
-    db.session.flush()  # Ensures user.id is populated before commit
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        if existing_user.is_verified:
+            return jsonify({"msg": "Email already registered. Please sign in."}), 400
+        # If user exists but is unverified (e.g. from previous failed attempt),
+        # allow updating credentials and retrying instead of hard blocking
+        existing_user.name = name
+        existing_user.password = generate_password_hash(password)
+        existing_user.user_role = user_role
+        user = existing_user
+    else:
+        hashed_password = generate_password_hash(password)
+        user = User(
+            name=name,
+            email=email,
+            password=hashed_password,
+            user_role=user_role,
+            is_verified=False
+        )
+        db.session.add(user)
+        db.session.flush()
 
-    # Conditionally create profile based on role
-    if user_role == UserRole.CREATOR:
-        creator_profile = CreatorProfile(user_id=user.id, display_name=name)
-        db.session.add(creator_profile)
-    elif user_role == UserRole.BRAND:
-        brand_profile = BrandProfile(user_id=user.id, brand_name=name)
-        db.session.add(brand_profile)
+        # Conditionally create profile based on role
+        if user_role == UserRole.CREATOR:
+            creator_profile = CreatorProfile(user_id=user.id, display_name=name)
+            db.session.add(creator_profile)
+        elif user_role == UserRole.BRAND:
+            brand_profile = BrandProfile(user_id=user.id, brand_name=name)
+            db.session.add(brand_profile)
+
+    # Check if mail service is configured
+    mail_configured = bool(
+        current_app.config.get("MAIL_USERNAME") and current_app.config.get("MAIL_PASSWORD")
+    )
+
+    if not mail_configured:
+        # If mail credentials are not set on the server, auto-verify user
+        # so they are never locked out of their account
+        user.is_verified = True
+        db.session.commit()
+        return jsonify({
+            "msg": "Signup successful! Your account is active. Please sign in."
+        }), 201
 
     db.session.commit()
 
-    # Generate email verification token
+    # Generate email verification token and send async email
     token = str(uuid.uuid4())
     tokens[token] = email
     send_verification_email(email, token)
