@@ -39,7 +39,7 @@ def create_app():
     app.config['JWT_HEADER_TYPE'] = 'Bearer'
 
     # -------------------
-    # Mail
+    # Mail & Email APIs
     # -------------------
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
@@ -47,9 +47,19 @@ def create_app():
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER') or os.getenv('MAIL_USERNAME')
-    # Mail is optional in local/dev - if it isn't configured we skip sending
-    # instead of throwing (see utils/email.py).
-    app.config['MAIL_SUPPRESS_SEND'] = not bool(os.getenv('MAIL_USERNAME'))
+
+    # Brevo HTTP API
+    app.config['BREVO_API_KEY'] = os.getenv('BREVO_API_KEY')
+    app.config['BREVO_SENDER_EMAIL'] = os.getenv('BREVO_SENDER_EMAIL')
+    app.config['BREVO_SENDER_NAME'] = os.getenv('BREVO_SENDER_NAME', 'Collab Junction')
+
+    # Resend HTTP API
+    app.config['RESEND_API_KEY'] = os.getenv('RESEND_API_KEY')
+    app.config['RESEND_FROM'] = os.getenv('RESEND_FROM', 'Collab Junction <onboarding@resend.dev>')
+
+    app.config['MAIL_SUPPRESS_SEND'] = not bool(
+        os.getenv('BREVO_API_KEY') or os.getenv('RESEND_API_KEY') or os.getenv('MAIL_USERNAME')
+    )
 
     # -------------------
     # Frontend URL (used for redirects/links, e.g. verification emails, OAuth)
