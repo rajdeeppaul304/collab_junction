@@ -67,12 +67,32 @@ def create_app():
     # -------------------
     # CORS
     # -------------------
-    origins = [o.strip() for o in os.getenv(
-        "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
-    ).split(",") if o.strip()]
-    CORS(app, supports_credentials=True,
-         origins=origins,
-         expose_headers=["Authorization"])
+    cors_env = os.getenv("CORS_ORIGINS", "").strip()
+    frontend_url = os.getenv("FRONTEND_URL", "").strip()
+
+    if not cors_env or cors_env == "*":
+        # Allow any origin dynamically (safely reflects request origin with credentials)
+        cors_origins = r".*"
+    else:
+        cors_origins = [o.strip() for o in cors_env.split(",") if o.strip()]
+        if frontend_url and frontend_url not in cors_origins:
+            cors_origins.append(frontend_url)
+        # Always allow Vercel deployments and localhost
+        cors_origins.extend([
+            r"https://.*\.vercel\.app",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+        ])
+
+    CORS(
+        app,
+        supports_credentials=True,
+        origins=cors_origins,
+        allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+        methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+        expose_headers=["Authorization"],
+    )
 
     # -------------------
     # Init extensions
