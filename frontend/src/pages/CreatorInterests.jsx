@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import MainLayout from "../components/layout/MainLayout";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import BrandAPI from "../brandApi";
+import { OfferAPI } from "../utils/marketplaceApi";
+import { Handshake } from "lucide-react";
 
 const CreatorInterests = () => {
   const [interests, setInterests] = useState([]);
@@ -14,6 +16,47 @@ const CreatorInterests = () => {
   const [minFollowers, setMinFollowers] = useState(0);
   const [productFilter, setProductFilter] = useState("");
   const [creatorNameFilter, setCreatorNameFilter] = useState("");
+
+  // Offer Creation Modal State
+  const [selectedInterest, setSelectedInterest] = useState(null);
+  const [offerBudget, setOfferBudget] = useState("");
+  const [offerTerms, setOfferTerms] = useState("");
+  const [creatingOffer, setCreatingOffer] = useState(false);
+  const navigate = useNavigate();
+
+  const handleMakeOffer = (item) => {
+    setSelectedInterest(item);
+    setOfferBudget("");
+    setOfferTerms(`Campaign collaboration for ${item.productName}`);
+  };
+
+  const handleOfferSubmit = async (e) => {
+    e.preventDefault();
+    if (!offerBudget || Number(offerBudget) < 0) {
+      alert("Please specify a valid budget");
+      return;
+    }
+    try {
+      setCreatingOffer(true);
+      const res = await OfferAPI.create({
+        product_id: selectedInterest.productId,
+        creator_id: selectedInterest.creatorId,
+        budget: Number(offerBudget),
+        terms: offerTerms,
+      });
+      alert("Offer sent successfully! Redirecting to deal workspace...");
+      navigate(`/offers/${res.data.offer.id}`);
+    } catch (err) {
+      if (err.response?.status === 409 && err.response.data?.offer) {
+        alert("An offer is already active for this product! Opening deal workspace...");
+        navigate(`/offers/${err.response.data.offer.id}`);
+      } else {
+        alert(err.response?.data?.msg || "Failed to create offer");
+      }
+    } finally {
+      setCreatingOffer(false);
+    }
+  };
 
   useEffect(() => {
     const fetchInterests = async () => {
@@ -227,20 +270,105 @@ const CreatorInterests = () => {
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex flex-col gap-3 pt-4 border-t border-gray-700">
-                  <Link to={`/brand/creator-profile/${item.creatorId}`} className="w-full">
-                    <Button size="sm" className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-semibold py-2 shadow-sm">
-                      View Profile
-                    </Button>
-                  </Link>
-                  <Link to={`/product/${item.productId}`} className="w-full">
-                    <Button size="sm" variant="secondary" className="w-full font-medium py-2">
-                      View Product
-                    </Button>
-                  </Link>
+                <div className="flex flex-col gap-2.5 pt-4 border-t border-gray-700">
+                  <Button
+                    onClick={() => handleMakeOffer(item)}
+                    size="sm"
+                    className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Handshake className="w-4 h-4" />
+                    Make Collaboration Offer
+                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Link to={`/brand/creator-profile/${item.creatorId}`} className="flex-1">
+                      <Button size="sm" variant="outline" className="w-full border-gray-600 text-gray-200 hover:bg-gray-700 py-1.5 text-xs">
+                        View Profile
+                      </Button>
+                    </Link>
+                    <Link to={`/product/${item.productId}`} className="flex-1">
+                      <Button size="sm" variant="secondary" className="w-full font-medium py-1.5 text-xs">
+                        View Product
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </Card>
             ))}
+          </div>
+        )}
+
+        {/* Make Offer Modal */}
+        {selectedInterest && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div className="w-full max-w-md bg-[#1c1c1e] border border-neutral-800 rounded-3xl p-6 text-white shadow-2xl">
+              <div className="flex items-center justify-between pb-4 border-b border-neutral-800 mb-4">
+                <div className="flex items-center gap-2">
+                  <Handshake className="w-5 h-5 text-yellow-400" />
+                  <h3 className="font-bold text-lg">Send Collaboration Offer</h3>
+                </div>
+                <button
+                  onClick={() => setSelectedInterest(null)}
+                  className="text-neutral-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-3 bg-[#242428] rounded-xl text-xs space-y-1 mb-4 text-neutral-300">
+                <p><strong>Product:</strong> {selectedInterest.productName}</p>
+                <p><strong>Creator:</strong> {selectedInterest.creatorName}</p>
+                <p><strong>Followers:</strong> {selectedInterest.followers?.toLocaleString() || 0}</p>
+              </div>
+
+              <form onSubmit={handleOfferSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    Initial Proposed Budget (₹ INR)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="500"
+                    required
+                    placeholder="e.g. 15000"
+                    value={offerBudget}
+                    onChange={(e) => setOfferBudget(e.target.value)}
+                    className="w-full bg-[#141416] border border-neutral-700 rounded-xl px-4 py-2.5 text-white font-semibold focus:border-yellow-400 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    Deliverables &amp; Campaign Scope
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={offerTerms}
+                    onChange={(e) => setOfferTerms(e.target.value)}
+                    placeholder="e.g. 1 Instagram Reel + 2 Stories featuring product unboxing..."
+                    className="w-full bg-[#141416] border border-neutral-700 rounded-xl p-3 text-xs text-white focus:border-yellow-400 focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInterest(null)}
+                    className="flex-1 py-2.5 rounded-xl border border-neutral-700 text-xs font-semibold hover:bg-neutral-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creatingOffer}
+                    className="flex-1 py-2.5 rounded-xl bg-yellow-400 text-black text-xs font-bold hover:bg-yellow-300 disabled:opacity-50"
+                  >
+                    {creatingOffer ? "Sending..." : "Send Offer"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>

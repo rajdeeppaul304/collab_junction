@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Logo from "../ui/Logo"
+import NotificationBell from "../notifications/NotificationBell"
 
 const Navbar = () => {
   const { isAuthenticated, userRole, signout } = useAuth()
@@ -72,6 +73,11 @@ const Navbar = () => {
         )
       }
       items.push(
+        <Link key="offers" to="/offers" className="hover:text-yellow-400 transition-colors font-medium">
+          Offers
+        </Link>,
+      )
+      items.push(
         <Link key="store" to="/store" className="hover:text-yellow-400 transition-colors">
           Store
         </Link>,
@@ -85,6 +91,11 @@ const Navbar = () => {
         <Link key="about" to="/about" className="hover:text-yellow-400 transition-colors">
           About
         </Link>,
+      )
+      items.push(
+        <div key="notifications" className="flex items-center">
+          <NotificationBell />
+        </div>,
       )
       items.push(
         <button key="logout" onClick={handleLogout} className="hover:text-yellow-400 transition-colors cursor-pointer">
@@ -153,6 +164,11 @@ const Navbar = () => {
                   Creator Interests
                 </Link>
               </>
+            )}
+            {isAuthenticated && (
+              <Link to="/offers" className="hover:text-yellow-400 transition-colors" onClick={() => setMenuOpen(false)}>
+                Offers &amp; Deals
+              </Link>
             )}
             <Link to="/store" className="hover:text-yellow-400 transition-colors" onClick={() => setMenuOpen(false)}>
               Store

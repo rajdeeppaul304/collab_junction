@@ -51,3 +51,12 @@ class Config:
 
     # Frontend
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    # Redis (for Socket.IO horizontal scaling across Gunicorn workers)
+    REDIS_URL = os.getenv("REDIS_URL")
+
+    # Razorpay (Test mode by default)
+    RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_collabjunction")
+    RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "test_secret_change_in_prod")
+    RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "test_webhook_secret")
+

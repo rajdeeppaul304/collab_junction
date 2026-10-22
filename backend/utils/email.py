@@ -140,3 +140,79 @@ def send_verification_email(email, token):
         current_app.logger.warning(f"Failed to queue verification email to {email}: {exc}")
 
     return verify_link
+
+
+def _send_notification_email_worker(app, to_email, subject, heading, body_text, cta_text, cta_link):
+    with app.app_context():
+        text_content = f"{heading}\n\n{body_text}\n\nView details: {cta_link}"
+        html_content = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #27272a; border-radius: 12px; background-color: #18181b; color: #f4f4f5;">
+            <div style="margin-bottom: 20px;">
+                <span style="background-color: #facc15; color: #000; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">Collab Junction</span>
+            </div>
+            <h2 style="color: #facc15; margin-top: 0; font-size: 22px;">{heading}</h2>
+            <p style="color: #d4d4d8; font-size: 15px; line-height: 1.6; white-space: pre-line;">{body_text}</p>
+            <div style="margin: 32px 0;">
+                <a href="{cta_link}" style="background-color: #facc15; color: #000000; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-block;">
+                    {cta_text} &rarr;
+                </a>
+            </div>
+            <hr style="border: none; border-top: 1px solid #27272a; margin: 24px 0;" />
+            <p style="color: #71717a; font-size: 12px; margin: 0;">Collab Junction Platform Notification &bull; <a href="{cta_link}" style="color: #a1a1aa;">Open Dashboard</a></p>
+        </div>
+        """
+
+        # 1. Brevo
+        brevo_key = app.config.get("BREVO_API_KEY")
+        if brevo_key:
+            try:
+                sender_email = app.config.get("BREVO_SENDER_EMAIL") or "no-reply@collabjunction.com"
+                sender_name = app.config.get("BREVO_SENDER_NAME", "Collab Junction")
+                _send_brevo_email(brevo_key, sender_email, sender_name, to_email, subject, html_content, text_content)
+                app.logger.info(f"Notification email dispatched via Brevo to {to_email}")
+                return
+            except Exception as exc:
+                app.logger.warning(f"Brevo notification email failed for {to_email}: {exc}")
+
+        # 2. Resend
+        resend_key = app.config.get("RESEND_API_KEY")
+        if resend_key:
+            try:
+                from_email = app.config.get("RESEND_FROM", "Collab Junction <onboarding@resend.dev>")
+                _send_resend_email(resend_key, from_email, to_email, subject, html_content, text_content)
+                app.logger.info(f"Notification email dispatched via Resend to {to_email}")
+                return
+            except Exception as exc:
+                app.logger.warning(f"Resend notification email failed for {to_email}: {exc}")
+
+        # 3. SMTP fallback
+        if bool(app.config.get("MAIL_USERNAME") and app.config.get("MAIL_PASSWORD")):
+            default_timeout = socket.getdefaulttimeout()
+            try:
+                socket.setdefaulttimeout(5)
+                msg = Message(subject=subject, recipients=[to_email])
+                msg.body = text_content
+                msg.html = html_content
+                mail.send(msg)
+                app.logger.info(f"Notification email dispatched via SMTP to {to_email}")
+            except Exception as exc:
+                app.logger.warning(f"SMTP notification failed for {to_email}: {exc}")
+            finally:
+                socket.setdefaulttimeout(default_timeout)
+
+
+def send_marketplace_notification_email(to_email, subject, heading, body_text, cta_text="View in Dashboard", cta_path="/dashboard/brand"):
+    """Dispatches a branded marketplace notification email asynchronously in background thread."""
+    if not to_email:
+        return
+    frontend_url = current_app.config.get("FRONTEND_URL") or os.getenv("FRONTEND_URL", "http://localhost:5173")
+    cta_link = f"{frontend_url.rstrip('/')}{cta_path if cta_path.startswith('/') else '/' + cta_path}"
+
+    app = current_app._get_current_object()
+    thread = threading.Thread(
+        target=_send_notification_email_worker,
+        args=(app, to_email, subject, heading, body_text, cta_text, cta_link)
+    )
+    thread.daemon = True
+    thread.start()
+

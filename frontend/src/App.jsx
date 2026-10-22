@@ -17,6 +17,8 @@ import ManageProducts from "./pages/ManageProducts"
 import FAQ from "./pages/FAQ"
 import Contact from "./pages/Contact"
 import NotFound from "./pages/NotFound"
+import OffersList from "./pages/OffersList"
+import OfferDetail from "./pages/OfferDetail"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./context/AuthContext"
 
@@ -37,6 +39,24 @@ function App() {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/contact" element={<Contact />} />
+
+          {/* Offers & Marketplace Deals (Protected for authenticated users) */}
+          <Route
+            path="/offers"
+            element={
+              <ProtectedRoute>
+                <OffersList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/offers/:id"
+            element={
+              <ProtectedRoute>
+                <OfferDetail />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected Routes - CREATOR only */}
          

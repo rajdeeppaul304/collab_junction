@@ -10,3 +10,7 @@ psycopg2-binary
 python-dotenv
 gunicorn
 cloudinary
+flask-socketio
+redis
+razorpay
+simple-websocket

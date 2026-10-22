@@ -8,7 +8,8 @@ if backend_dir not in sys.path:
 
 from flask import Flask, jsonify
 from flask_cors import CORS
-from extensions import db, jwt, mail, oauth
+from extensions import db, jwt, mail, oauth, socketio
+from sockets import register_socket_events
 from datetime import timedelta
 from dotenv import load_dotenv
 
@@ -70,6 +71,14 @@ def create_app():
     app.config['CLOUDINARY_URL'] = os.getenv('CLOUDINARY_URL')
 
     # -------------------
+    # Redis & Razorpay
+    # -------------------
+    app.config['REDIS_URL'] = os.getenv('REDIS_URL')
+    app.config['RAZORPAY_KEY_ID'] = os.getenv('RAZORPAY_KEY_ID', 'rzp_test_collabjunction')
+    app.config['RAZORPAY_KEY_SECRET'] = os.getenv('RAZORPAY_KEY_SECRET', 'test_secret_change_in_prod')
+    app.config['RAZORPAY_WEBHOOK_SECRET'] = os.getenv('RAZORPAY_WEBHOOK_SECRET', 'test_webhook_secret')
+
+    # -------------------
     # Frontend URL (used for redirects/links, e.g. verification emails, OAuth)
     # -------------------
     app.config['FRONTEND_URL'] = os.getenv('FRONTEND_URL', 'http://localhost:5173')
@@ -120,6 +129,19 @@ def create_app():
     mail.init_app(app)
     oauth.init_app(app)
 
+    # SocketIO initialization with optional Redis message queue for horizontal scaling
+    redis_url = app.config.get('REDIS_URL')
+    socketio_kwargs = {
+        "cors_allowed_origins": "*",
+        "async_mode": "threading",
+    }
+    if redis_url:
+        socketio_kwargs["message_queue"] = redis_url
+
+    socketio.init_app(app, **socketio_kwargs)
+    register_socket_events(socketio)
+
+
     # -------------------
     # OAuth (GitHub) - optional, only registered if credentials are present
     # -------------------
@@ -145,6 +167,15 @@ def create_app():
 
     from routes.brand import brand
     app.register_blueprint(brand, url_prefix='/brand')
+
+    from routes.offers import offers_bp
+    app.register_blueprint(offers_bp, url_prefix='/api')
+
+    from routes.payments import payments_bp
+    app.register_blueprint(payments_bp, url_prefix='/api')
+
+    from routes.notifications import notifications_bp
+    app.register_blueprint(notifications_bp, url_prefix='/api')
 
     return app
 
